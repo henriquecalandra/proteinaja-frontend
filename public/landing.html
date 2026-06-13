@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProteínaJá — Agente de Vendas por WhatsApp para Frigoríficos</title>
+  <meta name="description" content="Feche pedidos B2B no WhatsApp 24h por dia, sem atendente. O agente de IA que nunca dorme, fala português e entende o seu catálogo." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Nunito+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    /* ============================================================
+       RESET & TOKENS
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #1F3933;
+      --green-mid:  #2C5148;
+      --green-lt:   #3A6B5E;
+      --orange:     #D4691A;
+      --orange-lt:  #E8843A;
+      --cream:      #F8F6F1;
+      --cream-dk:   #EDE9E0;
+      --white:      #FFFFFF;
+      --text:       #1A1A1A;
+      --text-mid:   #4A5568;
+      --text-lt:    #718096;
+
+      --font-head:  'Nunito', sans-serif;
+      --font-body:  'Nunito Sans', sans-serif;
+
+      --r-sm:  8px;
+      --r-md:  16px;
+      --r-lg:  28px;
+      --r-xl:  48px;
+
+      --shadow-sm:  0 2px 8px rgba(31,57,51,0.08);
+      --shadow-md:  0 8px 32px rgba(31,57,51,0.12);
+      --shadow-lg:  0 24px 64px rgba(31,57,51,0.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--cream);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       UTILS
+    ============================================================ */
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 100px;
+    }
+    .tag--orange { background: rgba(212,105,26,0.12); color: var(--orange); }
+    .tag--cream  { background: rgba(248,246,241,0.15); color: var(--cream); border: 1px solid rgba(248,246,241,0.25); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 15px;
+      padding: 16px 32px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn--orange {
+      background: var(--orange);
+      color: var(--white);
+      box-shadow: 0 8px 24px rgba(212,105,26,0.35);
+    }
+    .btn--orange:hover {
+      background: var(--orange-lt);
+      box-shadow: 0 12px 32px rgba(212,105,26,0.45);
+    }
+
+    .btn--outline-cream {
+      background: transparent;
+      color: var(--cream);
+      border: 2px solid rgba(248,246,241,0.4);
+    }
+    .btn--outline-cream:hover {
+      border-color: var(--cream);
+      background: rgba(248,246,241,0.08);
+    }
+
+    .btn--green {
+      background: var(--green);
+      color: var(--white);
+      box-shadow: var(--shadow-md);
+    }
+    .btn--green:hover {
+      background: var(--green-mid);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* ============================================================
+       NAV
+    ============================================================ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 24px;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    nav.scrolled {
+      background: rgba(31,57,51,0.97);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 2px 24px rgba(0,0,0,0.15);
+    }
+    .nav-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: 22px;
+      color: var(--white);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-logo .logo-dot {
+      width: 10px; height: 10px;
+      background: var(--orange);
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-family: var(--font-head);
+      font-weight: 600;
+      font-size: 14px;
+      color: rgba(248,246,241,0.75);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--cream); }
+    .nav-cta { margin-left: 8px; }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    #hero {
+      background: var(--green);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding-top: 72px;
+    }
+
+    /* Grain texture overlay */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Diagonal accent stripe */
+    #hero::after {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -5%;
+      width: 55%;
+      height: 140%;
+      background: linear-gradient(135deg, rgba(58,107,94,0.3) 0%, transparent 60%);
+      border-left: 1px solid rgba(212,105,26,0.2);
+      transform: skewX(-8deg);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      padding: 80px 0 100px;
+    }
+
+    .hero-label {
+      margin-bottom: 20px;
+    }
+
+    .hero-heading {
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: clamp(38px, 5vw, 64px);
+      line-height: 1.1;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    .hero-heading em {
+      font-style: normal;
+      color: var(--orange);
+      position: relative;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px);
+      color: rgba(248,246,241,0.72);
+      margin-bottom: 40px;
+      max-width: 480px;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .hero-proof {
+      margin-top: 48px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .hero-proof-avatars {
+      display: flex;
+    }
+    .hero-proof-avatars span {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-left: -8px;
+      background: var(--green-mid);
+    }
+    .hero-proof-avatars span:first-child { margin-left: 0; }
+    .hero-proof-text {
+      font-size: 13px;
+      color: rgba(248,246,241,0.6);
+      font-family: var(--font-head);
+      font-weight: 600;
+    }
+    .hero-proof-text strong {
+      color: var(--cream);
+      display: block;
+      font-size: 14px;
+    }
+
+    /* === WHATSAPP MOCK === */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .wapp-phone {
+      width: 300px;
+      background: #ECE5DD;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 10px rgba(248,246,241,0.06),
+        0 0 0 20px rgba(248,246,241,0.03),
+        0 40px 80px rgba(0,0,0,0.4);
+      transform: perspective(1000px) rotateY(-8deg) rotateX(4deg);
+      transition: transform 0.5s ease;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: perspective(1000px) rotateY(-8deg) rotateX(4deg) translateY(0); }
+      50%       { transform: perspective(1000px) rotateY(-8deg) rotateX(4deg) translateY(-12px); }
+    }
+
+    .wapp-header {
+      background: #128C7E;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .wapp-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .wapp-info { flex: 1; }
+    .wapp-name {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 13px;
+      color: white;
+    }
+    .wapp-status {
+      font-size: 11px;
+      color: rgba(255,255,255,0.7);
+    }
+    .wapp-online-dot {
+      width: 8px; height: 8px;
+      background: #4ADE80;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .wapp-body {
+      padding: 12px;
+      min-height: 380px;
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c5b9ac' fill-opacity='0.15'%3E%3Cpath d='M50 50m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0'/%3E%3C/g%3E%3C/svg%3E");
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .msg {
+      max-width: 85%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      position: relative;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .msg.show { opacity: 1; transform: translateY(0); }
+
+    .msg--in {
+      background: white;
+      align-self: flex-start;
+      border-top-left-radius: 4px;
+      color: #111;
+    }
+    .msg--out {
+      background: #DCF8C6;
+      align-self: flex-end;
+      border-top-right-radius: 4px;
+      color: #111;
+    }
+    .msg-time {
+      font-size: 10px;
+      color: #999;
+      text-align: right;
+      margin-top: 2px;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 14px;
+      background: white;
+      border-radius: 12px;
+      border-top-left-radius: 4px;
+      align-self: flex-start;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .typing-indicator.show { opacity: 1; }
+    .typing-indicator span {
+      width: 7px; height: 7px;
+      background: #aaa;
+      border-radius: 50%;
+      animation: typingBounce 1.2s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30%           { transform: translateY(-5px); }
+    }
+
+    .wapp-footer {
+      background: #F0F0F0;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wapp-input {
+      flex: 1;
+      background: white;
+      border-radius: 24px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: #aaa;
+      font-family: var(--font-head);
+    }
+    .wapp-send {
+      width: 36px; height: 36px;
+      background: #128C7E;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero-visual { display: none; }
+      .hero-heading { font-size: 38px; }
+    }
+
+    /* ============================================================
+       SECTION SHARED
+    ============================================================ */
+    section { position: relative; }
+    .section-head {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    .section-head .tag { margin-bottom: 16px; }
+    .section-title {
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: clamp(28px, 3.5vw, 44px);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--green);
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 17px;
+      color: var(--text-mid);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* ============================================================
+       PROBLEMA
+    ============================================================ */
+    #problema {
+      padding: 112px 0;
+      background: var(--cream);
+    }
+
+    .problema-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .pain-card {
+      background: var(--white);
+      border-radius: var(--r-lg);
+      padding: 36px 32px;
+      border: 1px solid var(--cream-dk);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .pain-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .pain-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--orange), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .pain-card:hover::before { opacity: 1; }
+
+    .pain-icon {
+      width: 52px; height: 52px;
+      border-radius: var(--r-sm);
+      background: rgba(212,105,26,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: var(--orange);
+      margin-bottom: 20px;
+    }
+
+    .pain-title {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 17px;
+      color: var(--green);
+      margin-bottom: 10px;
+    }
+    .pain-text { font-size: 15px; color: var(--text-mid); line-height: 1.6; }
+
+    .pain-stat {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--cream-dk);
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 28px;
+      color: var(--orange);
+    }
+    .pain-stat small {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-lt);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 768px) {
+      .problema-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ============================================================
+       SOLUÇÃO
+    ============================================================ */
+    #solucao {
+      background: var(--green);
+      padding: 112px 0;
+      overflow: hidden;
+    }
+
+    #solucao .section-title { color: var(--cream); }
+    #solucao .section-sub   { color: rgba(248,246,241,0.65); }
+
+    .solucao-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .solucao-items { display: flex; flex-direction: column; gap: 32px; }
+
+    .solucao-item {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      padding: 28px;
+      border-radius: var(--r-md);
+      border: 1px solid rgba(248,246,241,0.08);
+      background: rgba(248,246,241,0.04);
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .solucao-item:hover {
+      background: rgba(248,246,241,0.08);
+      border-color: rgba(212,105,26,0.3);
+    }
+
+    .solucao-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: var(--orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .solucao-item-title {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--cream);
+      margin-bottom: 6px;
+    }
+    .solucao-item-text { font-size: 14px; color: rgba(248,246,241,0.6); line-height: 1.6; }
+
+    .solucao-visual {
+      position: relative;
+    }
+    .solucao-dashboard {
+      background: rgba(248,246,241,0.06);
+      border: 1px solid rgba(248,246,241,0.1);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      backdrop-filter: blur(10px);
+    }
+    .dash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(248,246,241,0.1);
+    }
+    .dash-title {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--cream);
+    }
+    .dash-badge {
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-head);
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: rgba(74,222,128,0.15);
+      color: #4ADE80;
+      letter-spacing: 0.05em;
+    }
+
+    .dash-orders { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .dash-order {
+      background: rgba(248,246,241,0.05);
+      border-radius: var(--r-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dash-order-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      background: var(--green-lt);
+    }
+    .dash-order-info { flex: 1; }
+    .dash-order-name {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cream);
+    }
+    .dash-order-detail { font-size: 11px; color: rgba(248,246,241,0.5); }
+    .dash-order-value {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--orange);
+    }
+    .dash-order-status {
+      font-size: 10px;
+      font-weight: 700;
+      font-family: var(--font-head);
+      padding: 3px 8px;
+      border-radius: 100px;
+      background: rgba(74,222,128,0.15);
+      color: #4ADE80;
+    }
+
+    .dash-totals {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .dash-total-card {
+      background: rgba(248,246,241,0.05);
+      border-radius: var(--r-sm);
+      padding: 14px;
+      text-align: center;
+    }
+    .dash-total-val {
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: 22px;
+      color: var(--cream);
+    }
+    .dash-total-val span { color: var(--orange); }
+    .dash-total-label { font-size: 11px; color: rgba(248,246,241,0.45); margin-top: 4px; }
+
+    @media (max-width: 900px) {
+      .solucao-layout { grid-template-columns: 1fr; }
+      .solucao-visual { display: none; }
+    }
+
+    /* ============================================================
+       COMO FUNCIONA
+    ============================================================ */
+    #como-funciona {
+      padding: 112px 0;
+      background: var(--cream);
+    }
+
+    .steps-layout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+      margin-top: 16px;
+    }
+
+    /* Connecting line */
+    .steps-layout::before {
+      content: '';
+      position: absolute;
+      top: 52px;
+      left: calc(16.67% + 24px);
+      right: calc(16.67% + 24px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--orange), rgba(212,105,26,0.3));
+      z-index: 0;
+    }
+
+    .step {
+      padding: 0 24px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-num {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--green);
+      color: var(--white);
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      position: relative;
+      box-shadow: 0 0 0 6px var(--cream), 0 0 0 8px rgba(31,57,51,0.15);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .step:hover .step-num {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 6px var(--cream), 0 0 0 12px rgba(212,105,26,0.25);
+    }
+    .step:nth-child(2) .step-num { background: var(--orange); }
+
+    .step-emoji {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      width: 28px; height: 28px;
+      background: var(--cream);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .step-title {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+    .step-text { font-size: 15px; color: var(--text-mid); line-height: 1.65; }
+
+    .step-tag {
+      display: inline-block;
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 100px;
+      background: rgba(31,57,51,0.08);
+      color: var(--green-mid);
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .steps-layout { grid-template-columns: 1fr; gap: 48px; }
+      .steps-layout::before { display: none; }
+    }
+
+    /* ============================================================
+       BENEFÍCIOS
+    ============================================================ */
+    #beneficios {
+      padding: 112px 0;
+      background: var(--white);
+    }
+
+    .beneficios-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .benefit-card {
+      border-radius: var(--r-lg);
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+    .benefit-card:hover { transform: translateY(-4px); }
+
+    .benefit-card--dark {
+      background: var(--green);
+      color: var(--white);
+      grid-column: span 2;
+    }
+
+    .benefit-card--light {
+      background: var(--cream);
+      border: 1px solid var(--cream-dk);
+    }
+
+    .benefit-card--orange {
+      background: var(--orange);
+      color: white;
+    }
+
+    .benefit-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .benefit-icon {
+      width: 56px; height: 56px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .benefit-card--dark .benefit-icon    { background: rgba(248,246,241,0.1); color: var(--orange); }
+    .benefit-card--light .benefit-icon   { background: rgba(31,57,51,0.08); color: var(--green); }
+    .benefit-card--orange .benefit-icon  { background: rgba(255,255,255,0.2); color: white; }
+
+    .benefit-number {
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: 48px;
+      line-height: 1;
+      opacity: 0.12;
+    }
+
+    .benefit-title {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .benefit-card--dark .benefit-title  { color: var(--cream); }
+    .benefit-card--light .benefit-title { color: var(--green); }
+
+    .benefit-text {
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .benefit-card--dark .benefit-text  { color: rgba(248,246,241,0.65); }
+    .benefit-card--light .benefit-text { color: var(--text-mid); }
+    .benefit-card--orange .benefit-text { color: rgba(255,255,255,0.85); }
+
+    /* Banner within dark card */
+    .benefit-card--dark .benefit-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .benefit-big-stat {
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: clamp(56px, 6vw, 88px);
+      line-height: 1;
+      color: var(--orange);
+      letter-spacing: -0.03em;
+    }
+    .benefit-big-sub {
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 600;
+      color: rgba(248,246,241,0.6);
+      margin-top: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .beneficios-grid { grid-template-columns: 1fr; }
+      .benefit-card--dark { grid-column: span 1; }
+      .benefit-card--dark .benefit-inner { grid-template-columns: 1fr; gap: 24px; }
+    }
+
+    /* ============================================================
+       CTA FINAL
+    ============================================================ */
+    #cta-final {
+      padding: 120px 0;
+      background: var(--green);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #cta-final::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(212,105,26,0.15) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    #cta-final::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .cta-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .cta-title {
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: clamp(32px, 4.5vw, 56px);
+      line-height: 1.1;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+    .cta-title em { font-style: normal; color: var(--orange); }
+
+    .cta-sub {
+      font-size: 18px;
+      color: rgba(248,246,241,0.65);
+      margin-bottom: 48px;
+      line-height: 1.6;
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+
+    .cta-note {
+      font-size: 13px;
+      color: rgba(248,246,241,0.4);
+      font-family: var(--font-head);
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      background: #141F1C;
+      padding: 48px 0 32px;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      font-family: var(--font-head);
+      font-weight: 900;
+      font-size: 18px;
+      color: var(--cream);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-copy {
+      font-size: 13px;
+      color: rgba(248,246,241,0.35);
+      font-family: var(--font-head);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+    .footer-links a {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(248,246,241,0.4);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--cream); }
+
+    /* ============================================================
+       SCROLL ANIMATIONS
+    ============================================================ */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .fade-up:nth-child(2) { transition-delay: 0.1s; }
+    .fade-up:nth-child(3) { transition-delay: 0.2s; }
+    .fade-up:nth-child(4) { transition-delay: 0.3s; }
+
+    /* ============================================================
+       BANNER DE PROVA SOCIAL (ticker)
+    ============================================================ */
+    .social-proof-bar {
+      background: var(--orange);
+      padding: 12px 0;
+      overflow: hidden;
+    }
+
+    .ticker-track {
+      display: flex;
+      gap: 48px;
+      white-space: nowrap;
+      animation: ticker 30s linear infinite;
+    }
+
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 13px;
+      color: white;
+      flex-shrink: 0;
+    }
+    .ticker-item i { font-size: 14px; }
+    .ticker-sep { color: rgba(255,255,255,0.4); font-size: 18px; }
+
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ====================================================
+       NAV
+  ==================================================== -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo">
+        <span class="logo-dot"></span>
+        ProteínaJá
+      </a>
+      <ul class="nav-links">
+        <li><a href="#problema">Problema</a></li>
+        <li><a href="#como-funciona">Como funciona</a></li>
+        <li><a href="#beneficios">Benefícios</a></li>
+      </ul>
+      <a href="/login" class="btn btn--orange nav-cta" style="font-size:13px; padding:12px 24px;">
+        Testar grátis <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ====================================================
+       HERO
+  ==================================================== -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="hero-label">
+            <span class="tag tag--cream">
+              <i class="fa-brands fa-whatsapp"></i>
+              Agente de IA para WhatsApp
+            </span>
+          </div>
+          <h1 class="hero-heading">
+            Seu frigorífico<br/>
+            vendendo <em>24h</em><br/>
+            no WhatsApp.
+          </h1>
+          <p class="hero-sub">
+            O ProteínaJá atende seus compradores B2B automaticamente — recebe pedidos, confirma itens e fecha vendas enquanto você dorme. Sem atendente, sem pedido perdido.
+          </p>
+          <div class="hero-actions">
+            <a href="/login" class="btn btn--orange">
+              <i class="fa-solid fa-bolt"></i>
+              Quero testar grátis
+            </a>
+            <a href="#como-funciona" class="btn btn--outline-cream">
+              Ver como funciona
+            </a>
+          </div>
+          <div class="hero-proof">
+            <div class="hero-proof-avatars">
+              <span>🥩</span>
+              <span>🏪</span>
+              <span>🍽️</span>
+              <span>+</span>
+            </div>
+            <div class="hero-proof-text">
+              <strong>Frigoríficos e distribuidoras</strong>
+              já usam o ProteínaJá
+            </div>
+          </div>
+        </div>
+
+        <!-- WhatsApp animado -->
+        <div class="hero-visual">
+          <div class="wapp-phone" id="wappPhone">
+            <div class="wapp-header">
+              <div class="wapp-avatar">🥩</div>
+              <div class="wapp-info">
+                <div class="wapp-name">ProteínaJá</div>
+                <div class="wapp-status">
+                  <span class="wapp-online-dot"></span>online agora
+                </div>
+              </div>
+              <i class="fa-solid fa-ellipsis-vertical" style="color:rgba(255,255,255,0.7); font-size:16px;"></i>
+            </div>
+            <div class="wapp-body" id="wappBody">
+              <!-- mensagens injetadas por JS -->
+            </div>
+            <div class="wapp-footer">
+              <div class="wapp-input">Mensagem</div>
+              <div class="wapp-send"><i class="fa-solid fa-paper-plane"></i></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       SOCIAL PROOF BAR
+  ==================================================== -->
+  <div class="social-proof-bar">
+    <div class="ticker-track" id="ticker">
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Pedidos fechados 24h por dia</div>
+      <div class="ticker-sep">·</div>
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Zero pedido perdido no WhatsApp</div>
+      <div class="ticker-sep">·</div>
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Fala português natural</div>
+      <div class="ticker-sep">·</div>
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Escala para atendente quando necessário</div>
+      <div class="ticker-sep">·</div>
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Dashboard em tempo real</div>
+      <div class="ticker-sep">·</div>
+      <!-- Duplicados para loop infinito -->
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Pedidos fechados 24h por dia</div>
+      <div class="ticker-sep">·</div>
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Zero pedido perdido no WhatsApp</div>
+      <div class="ticker-sep">·</div>
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Fala português natural</div>
+      <div class="ticker-sep">·</div>
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Escala para atendente quando necessário</div>
+      <div class="ticker-sep">·</div>
+      <div class="ticker-item"><i class="fa-solid fa-check-circle"></i> Dashboard em tempo real</div>
+      <div class="ticker-sep">·</div>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       PROBLEMA
+  ==================================================== -->
+  <section id="problema">
+    <div class="container">
+      <div class="section-head">
+        <span class="tag tag--orange"><i class="fa-solid fa-triangle-exclamation"></i> O problema</span>
+        <h2 class="section-title">Pedidos que somem.<br/>Vendas que escapam.</h2>
+        <p class="section-sub">Toda distribuidora de carne vive a mesma realidade: o WhatsApp não para, mas o atendente sim.</p>
+      </div>
+
+      <div class="problema-grid">
+        <div class="pain-card fade-up">
+          <div class="pain-icon"><i class="fa-solid fa-moon"></i></div>
+          <div class="pain-title">O cliente pede fora do horário</div>
+          <div class="pain-text">Açougues e restaurantes compram quando precisam — às 22h, sábado, domingo. Sem atendimento, o pedido vai para o concorrente.</div>
+          <div class="pain-stat">
+            73%
+            <small>dos pedidos B2B chegam fora do horário comercial</small>
+          </div>
+        </div>
+
+        <div class="pain-card fade-up">
+          <div class="pain-icon"><i class="fa-solid fa-message-slash"></i></div>
+          <div class="pain-title">Mensagem fica sem resposta</div>
+          <div class="pain-text">O atendente atende 10 clientes ao mesmo tempo. Mensagem esquecida no WhatsApp vira pedido perdido. E o cliente não avisa — ele some.</div>
+          <div class="pain-stat">
+            1 em 3
+            <small>pedidos via WhatsApp ficam sem resposta rápida</small>
+          </div>
+        </div>
+
+        <div class="pain-card fade-up">
+          <div class="pain-icon"><i class="fa-solid fa-chart-line-down"></i></div>
+          <div class="pain-title">Sem visibilidade dos pedidos</div>
+          <div class="pain-text">O histórico de vendas vive espalhado em conversas. Não tem relatório, não tem controle, não tem previsão de demanda. Só achismo.</div>
+          <div class="pain-stat">
+            R$ 0
+            <small>de receita rastreada na maioria dos WhatsApps comerciais</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       SOLUÇÃO
+  ==================================================== -->
+  <section id="solucao">
+    <div class="container">
+      <div class="section-head">
+        <span class="tag tag--cream"><i class="fa-solid fa-sparkles"></i> A solução</span>
+        <h2 class="section-title">Um vendedor que nunca dorme,<br/>nunca esquece, nunca erra.</h2>
+        <p class="section-sub">O ProteínaJá é um agente de IA que atende seus compradores no WhatsApp com a eficiência de um sistema e a naturalidade de uma pessoa.</p>
+      </div>
+
+      <div class="solucao-layout">
+        <div class="solucao-items">
+          <div class="solucao-item fade-up">
+            <div class="solucao-icon"><i class="fa-solid fa-robot"></i></div>
+            <div>
+              <div class="solucao-item-title">IA que entende o contexto</div>
+              <div class="solucao-item-text">Responde em português natural, entende variações ("alcatra", "contra-filé", "dianteiro"), confirma quantidade, peso e preço sem fricção.</div>
+            </div>
+          </div>
+
+          <div class="solucao-item fade-up">
+            <div class="solucao-icon"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <div class="solucao-item-title">24h por dia, 7 dias por semana</div>
+              <div class="solucao-item-text">Não tira folga, não fica doente, não está no almoço. Cada mensagem que chega é respondida em segundos.</div>
+            </div>
+          </div>
+
+          <div class="solucao-item fade-up">
+            <div class="solucao-icon"><i class="fa-solid fa-user-headset"></i></div>
+            <div>
+              <div class="solucao-item-title">Escala para humano quando precisa</div>
+              <div class="solucao-item-text">Quando o pedido é complexo ou o cliente pede, a conversa é transferida para um atendente sem perder o histórico.</div>
+            </div>
+          </div>
+
+          <div class="solucao-item fade-up">
+            <div class="solucao-icon"><i class="fa-solid fa-chart-bar"></i></div>
+            <div>
+              <div class="solucao-item-title">Dashboard com tudo em tempo real</div>
+              <div class="solucao-item-text">Todos os pedidos, clientes e valores em um painel claro. Exporta, acompanha e toma decisão com dados reais.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard mockup -->
+        <div class="solucao-visual fade-up">
+          <div class="solucao-dashboard">
+            <div class="dash-header">
+              <span class="dash-title">Dashboard — Pedidos de hoje</span>
+              <span class="dash-badge">● Ao vivo</span>
+            </div>
+            <div class="dash-orders">
+              <div class="dash-order">
+                <div class="dash-order-avatar">🏪</div>
+                <div class="dash-order-info">
+                  <div class="dash-order-name">Açougue do Zé</div>
+                  <div class="dash-order-detail">20kg alcatra • 10kg fraldinha</div>
+                </div>
+                <div>
+                  <div class="dash-order-value">R$ 890</div>
+                  <div class="dash-order-status">Confirmado</div>
+                </div>
+              </div>
+              <div class="dash-order">
+                <div class="dash-order-avatar">🍽️</div>
+                <div class="dash-order-info">
+                  <div class="dash-order-name">Restaurante Sabor &amp; Arte</div>
+                  <div class="dash-order-detail">15kg picanha • 5kg contra-filé</div>
+                </div>
+                <div>
+                  <div class="dash-order-value">R$ 1.240</div>
+                  <div class="dash-order-status">Confirmado</div>
+                </div>
+              </div>
+              <div class="dash-order">
+                <div class="dash-order-avatar">🛒</div>
+                <div class="dash-order-info">
+                  <div class="dash-order-name">Mercadinho Bom Preço</div>
+                  <div class="dash-order-detail">30kg patinho • 8kg costela</div>
+                </div>
+                <div>
+                  <div class="dash-order-value">R$ 720</div>
+                  <div class="dash-order-status">Confirmado</div>
+                </div>
+              </div>
+            </div>
+            <div class="dash-totals">
+              <div class="dash-total-card">
+                <div class="dash-total-val"><span>R$</span> 8.430</div>
+                <div class="dash-total-label">Vendido hoje</div>
+              </div>
+              <div class="dash-total-card">
+                <div class="dash-total-val">24</div>
+                <div class="dash-total-label">Pedidos fechados</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       COMO FUNCIONA
+  ==================================================== -->
+  <section id="como-funciona">
+    <div class="container">
+      <div class="section-head">
+        <span class="tag tag--orange"><i class="fa-solid fa-map"></i> Como funciona</span>
+        <h2 class="section-title">Simples para o cliente.<br/>Poderoso para você.</h2>
+        <p class="section-sub">O comprador não precisa aprender nada. Só mandar mensagem como sempre fez — o agente cuida do resto.</p>
+      </div>
+
+      <div class="steps-layout">
+        <div class="step fade-up">
+          <div class="step-num">
+            1
+            <div class="step-emoji">💬</div>
+          </div>
+          <div class="step-tag">Cliente</div>
+          <div class="step-title">Manda mensagem no WhatsApp</div>
+          <div class="step-text">O comprador escreve o pedido como sempre fez — "quero 20kg de alcatra" — sem formulário, sem app, sem treinamento.</div>
+        </div>
+
+        <div class="step fade-up">
+          <div class="step-num" style="background:var(--orange);">
+            2
+            <div class="step-emoji">🤖</div>
+          </div>
+          <div class="step-tag">ProteínaJá</div>
+          <div class="step-title">Agente responde e fecha o pedido</div>
+          <div class="step-text">Em segundos, o agente confirma item, quantidade, preço e entrega. Se precisar, esclarece dúvidas e fecha tudo por chat — sem sair do WhatsApp.</div>
+        </div>
+
+        <div class="step fade-up">
+          <div class="step-num">
+            3
+            <div class="step-emoji">📊</div>
+          </div>
+          <div class="step-tag">Você</div>
+          <div class="step-title">Acompanha tudo no dashboard</div>
+          <div class="step-text">Todo pedido aparece no painel em tempo real. Você vê clientes, volumes, valores e histórico — sem precisar revirar conversas.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       BENEFÍCIOS
+  ==================================================== -->
+  <section id="beneficios">
+    <div class="container">
+      <div class="section-head">
+        <span class="tag tag--orange"><i class="fa-solid fa-trophy"></i> Benefícios</span>
+        <h2 class="section-title">Resultado concreto<br/>para o seu negócio.</h2>
+      </div>
+
+      <div class="beneficios-grid">
+        <!-- Card grande escuro — highlight -->
+        <div class="benefit-card benefit-card--dark fade-up">
+          <div class="benefit-inner">
+            <div>
+              <div class="benefit-icon" style="margin-bottom:20px;">
+                <i class="fa-solid fa-clock"></i>
+              </div>
+              <div class="benefit-title">Disponível 24h, 7 dias por semana</div>
+              <div class="benefit-text">Enquanto seus concorrentes dormem, o ProteínaJá está fechando pedido. Açougues e restaurantes compram quando precisam — e você não perde mais nenhuma venda por falta de atendimento.</div>
+            </div>
+            <div>
+              <div class="benefit-big-stat">24/7</div>
+              <div class="benefit-big-sub">Atendimento ininterrupto,<br/>zero custo extra</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="benefit-card benefit-card--light fade-up">
+          <div class="benefit-card-header">
+            <div class="benefit-icon"><i class="fa-solid fa-ban"></i></div>
+            <div class="benefit-number">02</div>
+          </div>
+          <div class="benefit-title">Zero pedido perdido</div>
+          <div class="benefit-text">Cada mensagem recebe resposta. Nenhum cliente fica esperando. O agente prioriza, organiza e confirma — sem deixar ninguém no vácuo.</div>
+        </div>
+
+        <div class="benefit-card benefit-card--orange fade-up">
+          <div class="benefit-card-header">
+            <div class="benefit-icon"><i class="fa-solid fa-user-headset"></i></div>
+            <div class="benefit-number" style="color:rgba(255,255,255,0.2);">03</div>
+          </div>
+          <div class="benefit-title" style="color:white;">Escala para humano</div>
+          <div class="benefit-text">Quando o caso pede um toque humano, o agente transfere a conversa para seu atendente — com o contexto completo, sem repetir nada.</div>
+        </div>
+
+        <div class="benefit-card benefit-card--light fade-up">
+          <div class="benefit-card-header">
+            <div class="benefit-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="benefit-number">04</div>
+          </div>
+          <div class="benefit-title">Dashboard em tempo real</div>
+          <div class="benefit-text">Veja todos os pedidos, clientes recorrentes, cortes mais vendidos e receita do dia — tudo num painel limpo, sem planilha.</div>
+        </div>
+
+        <div class="benefit-card benefit-card--light fade-up">
+          <div class="benefit-card-header">
+            <div class="benefit-icon"><i class="fa-solid fa-comments"></i></div>
+            <div class="benefit-number">05</div>
+          </div>
+          <div class="benefit-title">Fala português de verdade</div>
+          <div class="benefit-text">Entende apelidos de cortes, variações regionais e o jeito que seu cliente realmente escreve. Sem "não entendi sua solicitação".</div>
+        </div>
+
+        <div class="benefit-card benefit-card--light fade-up">
+          <div class="benefit-card-header">
+            <div class="benefit-icon"><i class="fa-solid fa-plug"></i></div>
+            <div class="benefit-number">06</div>
+          </div>
+          <div class="benefit-title">Integra com seu catálogo</div>
+          <div class="benefit-text">Cadastre seus cortes, preços e regras uma vez. O agente usa seu catálogo para confirmar disponibilidade e preços corretos em cada pedido.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       CTA FINAL
+  ==================================================== -->
+  <section id="cta-final">
+    <div class="container">
+      <div class="cta-inner">
+        <span class="tag tag--cream" style="margin-bottom:24px; display:inline-flex;">
+          <i class="fa-brands fa-whatsapp"></i>
+          Pronto para começar?
+        </span>
+        <h2 class="cta-title">
+          Seu próximo pedido<br/>
+          pode ser fechado<br/>
+          <em>enquanto você dorme.</em>
+        </h2>
+        <p class="cta-sub">Comece a usar o ProteínaJá hoje. Sem contrato longo, sem taxa de setup. Só você, seu WhatsApp e uma central de vendas que nunca para.</p>
+        <div class="cta-actions">
+          <a href="/login" class="btn btn--orange" style="font-size:17px; padding:18px 40px;">
+            <i class="fa-solid fa-bolt"></i>
+            Quero testar grátis
+          </a>
+          <a href="https://wa.me/5511999999999" class="btn btn--outline-cream" target="_blank">
+            <i class="fa-brands fa-whatsapp"></i>
+            Falar com a equipe
+          </a>
+        </div>
+        <p class="cta-note">Para frigoríficos e distribuidoras de carne · Sem cartão de crédito para testar</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       FOOTER
+  ==================================================== -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <a href="#hero" class="footer-logo">
+          <span style="display:inline-block; width:8px; height:8px; background:var(--orange); border-radius:50%;"></span>
+          ProteínaJá
+        </a>
+        <ul class="footer-links">
+          <li><a href="#problema">Problema</a></li>
+          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#beneficios">Benefícios</a></li>
+          <li><a href="/login">Entrar</a></li>
+        </ul>
+        <p class="footer-copy">© 2024 ProteínaJá · Todos os direitos reservados</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ====================================================
+       SCRIPTS
+  ==================================================== -->
+  <script>
+    // ── Nav scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 30);
+    });
+
+    // ── WhatsApp conversation animation
+    const messages = [
+      { type: 'in',  text: 'Oi, quero pedir carne pra semana' },
+      { type: 'out', text: '📦 Olá! Tudo bem? Sou o assistente do Frigorífico Central. O que você precisa?' },
+      { type: 'in',  text: '20kg de alcatra e 10kg de fraldinha' },
+      { type: 'out', text: '✅ Perfeito!\n\n• 20kg Alcatra — R$ 32/kg\n• 10kg Fraldinha — R$ 28/kg\n\nTotal: R$ 920,00\nEntrega: amanhã até 12h\n\nConfirmo o pedido?' },
+      { type: 'in',  text: 'Pode confirmar 👍' },
+      { type: 'out', text: '✅ Pedido confirmado!\n🧾 Protocolo #2847\nAté amanhã!' },
+    ];
+
+    const body = document.getElementById('wappBody');
+    let idx = 0;
+
+    function getTime() {
+      const d = new Date();
+      return d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+    }
+
+    function showTyping() {
+      const t = document.createElement('div');
+      t.className = 'typing-indicator';
+      t.innerHTML = '<span></span><span></span><span></span>';
+      body.appendChild(t);
+      body.scrollTop = body.scrollHeight;
+      requestAnimationFrame(() => t.classList.add('show'));
+      return t;
+    }
+
+    function addMsg(msg) {
+      const div = document.createElement('div');
+      div.className = `msg msg--${msg.type}`;
+      div.innerHTML = msg.text.replace(/\n/g, '<br>') +
+        `<div class="msg-time">${getTime()}${msg.type === 'out' ? ' ✓✓' : ''}</div>`;
+      body.appendChild(div);
+      body.scrollTop = body.scrollHeight;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => div.classList.add('show'));
+      });
+    }
+
+    function runConversation() {
+      if (idx >= messages.length) {
+        // restart after pause
+        setTimeout(() => {
+          body.innerHTML = '';
+          idx = 0;
+          setTimeout(step, 800);
+        }, 4000);
+        return;
+      }
+
+      const msg = messages[idx];
+      idx++;
+
+      if (msg.type === 'in') {
+        setTimeout(() => {
+          addMsg(msg);
+          setTimeout(step, 1200);
+        }, 600);
+      } else {
+        const typing = showTyping();
+        setTimeout(() => {
+          typing.remove();
+          addMsg(msg);
+          setTimeout(step, 1400);
+        }, 1400);
+      }
+    }
+
+    function step() { runConversation(); }
+    setTimeout(step, 1000);
+
+    // ── Scroll fade-in
+    const fadeEls = document.querySelectorAll('.fade-up');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    fadeEls.forEach(el => observer.observe(el));
+
+    // ── Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
