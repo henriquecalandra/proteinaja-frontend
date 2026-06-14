@@ -39,22 +39,22 @@ jobs:
             # Create .env with working defaults if missing
             ENV_FILE=/home/opc/proteinaja-backend/.env
             if [ ! -f "$ENV_FILE" ]; then
-              cat > "$ENV_FILE" << 'ENVEOF'
-POSTGRES_USER=proteinaja
-POSTGRES_PASSWORD=trocar_em_producao
-POSTGRES_DB=proteinaja_db
-DATABASE_URL=postgresql://proteinaja:trocar_em_producao@postgres:5432/proteinaja_db
-EVOLUTION_API_KEY=trocar_em_producao
-EVOLUTION_API_URL=http://evolution-api:8080
-EVOLUTION_INSTANCE_NAME=frigorifico_sao_lucas
-GROQ_API_KEY=gsk_SUBSTITUA_AQUI
-JWT_SECRET=substitua_por_um_secret_longo_e_aleatorio
-JWT_ALGORITHM=HS256
-JWT_EXPIRE_HOURS=24
-FRIGORIFICO_NOME=Frigorífico São Lucas
-FRIGORIFICO_CIDADE=Goiás
-ENVEOF
-              echo ".env criado com valores padrão — lembre de substituir GROQ_API_KEY e JWT_SECRET"
+              printf '%s\n' \
+                'POSTGRES_USER=proteinaja' \
+                'POSTGRES_PASSWORD=trocar_em_producao' \
+                'POSTGRES_DB=proteinaja_db' \
+                'DATABASE_URL=postgresql://proteinaja:trocar_em_producao@postgres:5432/proteinaja_db' \
+                'EVOLUTION_API_KEY=trocar_em_producao' \
+                'EVOLUTION_API_URL=http://evolution-api:8080' \
+                'EVOLUTION_INSTANCE_NAME=frigorifico_sao_lucas' \
+                'GROQ_API_KEY=gsk_SUBSTITUA_AQUI' \
+                'JWT_SECRET=substitua_por_um_secret_longo_e_aleatorio' \
+                'JWT_ALGORITHM=HS256' \
+                'JWT_EXPIRE_HOURS=24' \
+                'FRIGORIFICO_NOME=Frigorifico Sao Lucas' \
+                'FRIGORIFICO_CIDADE=Goias' \
+                > "$ENV_FILE"
+              echo ".env criado com valores padrao"
             fi
 
             # Start all containers
