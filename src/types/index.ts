@@ -82,6 +82,11 @@ export interface Empresa {
   evolution_instance: string | null;
   whatsapp_conectado: boolean;
   created_at: string;
+  email_contato: string | null;
+  telefone: string | null;
+  endereco: string | null;
+  responsavel: string | null;
+  segmento: string | null;
 }
 
 export interface UsuarioMe {
@@ -98,4 +103,19 @@ export interface AdminOverview {
   total_pedidos_plataforma: number;
   gmv_plataforma: number;
   total_clientes: number;
+}
+
+export interface DashboardAnalytics {
+  faturamento_por_dia: { dia: string; total: number; qtd: number }[];
+  pedidos_por_status: {
+    confirmado: number;
+    negociando: number;
+    aguardando: number;
+    entregue: number;
+  };
+  top_produtos: { produto: string; qtd_kg: number; receita: number }[];
+  top_clientes: { nome: string; total: number }[];
+  ticket_medio: number;
+  total_a_receber: number;
+  total_pago: number;
 }

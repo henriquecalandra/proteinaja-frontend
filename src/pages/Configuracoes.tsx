@@ -14,6 +14,11 @@ interface FormState {
   whatsapp_numero: string;
   evolution_url: string;
   evolution_instance: string;
+  email_contato: string;
+  telefone: string;
+  endereco: string;
+  responsavel: string;
+  segmento: string;
 }
 
 const formVazio: FormState = {
@@ -23,6 +28,11 @@ const formVazio: FormState = {
   whatsapp_numero: '',
   evolution_url: '',
   evolution_instance: '',
+  email_contato: '',
+  telefone: '',
+  endereco: '',
+  responsavel: '',
+  segmento: '',
 };
 
 export default function Configuracoes() {
@@ -42,6 +52,11 @@ export default function Configuracoes() {
       whatsapp_numero: e.whatsapp_numero ?? '',
       evolution_url: e.evolution_url ?? '',
       evolution_instance: e.evolution_instance ?? '',
+      email_contato: e.email_contato ?? '',
+      telefone: e.telefone ?? '',
+      endereco: e.endereco ?? '',
+      responsavel: e.responsavel ?? '',
+      segmento: e.segmento ?? '',
     });
   }
 
@@ -64,6 +79,11 @@ export default function Configuracoes() {
         whatsapp_numero: form.whatsapp_numero || null,
         evolution_url: form.evolution_url || null,
         evolution_instance: form.evolution_instance || null,
+        email_contato: form.email_contato || null,
+        telefone: form.telefone || null,
+        endereco: form.endereco || null,
+        responsavel: form.responsavel || null,
+        segmento: form.segmento || null,
       });
       aplicar(data);
       setMsg('Dados salvos com sucesso.');
@@ -148,6 +168,60 @@ export default function Configuracoes() {
               onChange={(e) => setForm({ ...form, cidade: e.target.value })}
               className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">E-mail de contato</label>
+            <input
+              type="email"
+              value={form.email_contato}
+              onChange={(e) => setForm({ ...form, email_contato: e.target.value })}
+              placeholder="contato@empresa.com"
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Telefone</label>
+            <input
+              type="text"
+              value={form.telefone}
+              onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+              placeholder="(62) 99000-1234"
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Endereço</label>
+            <input
+              type="text"
+              value={form.endereco}
+              onChange={(e) => setForm({ ...form, endereco: e.target.value })}
+              placeholder="Rua, número, bairro"
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Responsável</label>
+            <input
+              type="text"
+              value={form.responsavel}
+              onChange={(e) => setForm({ ...form, responsavel: e.target.value })}
+              placeholder="Nome do responsável"
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Segmento</label>
+            <select
+              value={form.segmento}
+              onChange={(e) => setForm({ ...form, segmento: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent bg-white"
+            >
+              <option value="">Selecione...</option>
+              <option value="Bovino">Bovino</option>
+              <option value="Suino">Suíno</option>
+              <option value="Aves">Aves</option>
+              <option value="Misto">Misto</option>
+            </select>
           </div>
           {erro && <p className="text-red-500 text-sm">{erro}</p>}
           {msg && <p className="text-green-600 text-sm">{msg}</p>}

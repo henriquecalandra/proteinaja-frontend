@@ -6,6 +6,7 @@ import { AxiosError } from 'axios';
 export default function Login() {
   const [modo, setModo] = useState<'entrar' | 'cadastro'>('entrar');
   const [nome, setNome] = useState('');
+  const [nomeEmpresa, setNomeEmpresa] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
@@ -23,7 +24,7 @@ export default function Login() {
     setLoading(true);
     try {
       if (modo === 'cadastro') {
-        const { data } = await register(nome, email, senha);
+        const { data } = await register(nome, email, senha, nomeEmpresa || undefined);
         localStorage.setItem('token', data.access_token);
       } else {
         const { data } = await login(email, senha);
@@ -96,6 +97,18 @@ export default function Login() {
                   required
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
                   placeholder="Seu nome"
+                />
+              </div>
+            )}
+            {modo === 'cadastro' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">Nome da empresa</label>
+                <input
+                  type="text"
+                  value={nomeEmpresa}
+                  onChange={(e) => setNomeEmpresa(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  placeholder="Frigorífico do Marcos"
                 />
               </div>
             )}

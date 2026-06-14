@@ -25,8 +25,18 @@ api.interceptors.response.use(
 export const login = (email: string, senha: string) =>
   api.post<{ access_token: string }>('/auth/login', { email, senha });
 
-export const register = (nome: string, email: string, senha: string) =>
-  api.post<{ access_token: string }>('/auth/register', { nome, email, senha });
+export const register = (
+  nome: string,
+  email: string,
+  senha: string,
+  nome_empresa?: string
+) =>
+  api.post<{ access_token: string }>('/auth/register', {
+    nome,
+    email,
+    senha,
+    nome_empresa,
+  });
 
 export interface ClienteCreatePayload {
   nome: string;
@@ -68,6 +78,7 @@ export const criarPedido = (payload: PedidoCreatePayload) =>
   api.post('/orders/', payload);
 
 export const getOverview = () => api.get('/dashboard/overview');
+export const getDashboardAnalytics = () => api.get('/dashboard/analytics');
 export const getConversas = () => api.get('/conversations/');
 export const getMensagens = (id: number) => api.get(`/conversations/${id}/messages`);
 export const assumirConversa = (id: number) => api.post(`/conversations/${id}/assume`);
@@ -111,6 +122,11 @@ export interface EmpresaUpdatePayload {
   whatsapp_numero?: string | null;
   evolution_url?: string | null;
   evolution_instance?: string | null;
+  email_contato?: string | null;
+  telefone?: string | null;
+  endereco?: string | null;
+  responsavel?: string | null;
+  segmento?: string | null;
 }
 
 export const getMe = () => api.get('/auth/me');
