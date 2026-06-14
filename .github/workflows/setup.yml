@@ -18,20 +18,25 @@ jobs:
           script: |
             set -e
 
-            # Swap (2GB) — usar dd (fallocate cria arquivo esparso que nao funciona como swap)
+            # Swap (4GB) — usar dd (fallocate cria arquivo esparso que nao funciona como swap)
             if ! swapon --show | grep -q /swapfile; then
-              sudo dd if=/dev/zero of=/swapfile bs=1M count=2048 status=none
+              sudo dd if=/dev/zero of=/swapfile bs=1M count=4096 status=none
               sudo chmod 600 /swapfile
               sudo mkswap /swapfile
               sudo swapon /swapfile
               grep -q /swapfile /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
             fi
+            # Forca o kernel a usar swap agressivamente (evita OOM com pouca RAM fisica)
+            sudo sysctl -w vm.swappiness=100
             free -h
 
-            # Docker
+            # Docker (instala em etapas para nao estourar a memoria)
             if ! command -v docker &>/dev/null; then
               sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-              sudo dnf install -y --allowerasing git docker-ce docker-ce-cli containerd.io docker-compose-plugin
+              sudo dnf clean all
+              sudo dnf install -y --setopt=max_parallel_downloads=1 git
+              sudo dnf install -y --setopt=max_parallel_downloads=1 --allowerasing containerd.io
+              sudo dnf install -y --setopt=max_parallel_downloads=1 docker-ce docker-ce-cli docker-compose-plugin
               sudo systemctl enable --now docker
               sudo usermod -aG docker opc
             fi
