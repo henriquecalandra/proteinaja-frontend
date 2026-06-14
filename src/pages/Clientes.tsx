@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react';
-import { getClientes, criarCliente, atualizarCliente, ClienteCreatePayload } from '../api/client';
-import { Cliente } from '../types';
+import { getClientes, criarCliente, atualizarCliente, getClienteDetalhe, ClienteCreatePayload } from '../api/client';
+import { Cliente, ClienteDetalhe } from '../types';
 
 const tipoLabel: Record<string, string> = {
   acougue: 'Açougue',
@@ -18,6 +18,12 @@ const tipoColor: Record<string, string> = {
 
 const tipoOpcoes: Cliente['tipo'][] = ['acougue', 'restaurante', 'mercadinho', 'food_service'];
 
+const conversaStatusLabel: Record<string, string> = {
+  agente: '🤖 Agente',
+  humano: '👤 Humano',
+  encerrada: '✓ Encerrada',
+};
+
 const formVazio: ClienteCreatePayload = {
   nome: '',
   whatsapp: '',
@@ -33,6 +39,26 @@ export default function Clientes() {
   const [form, setForm] = useState<ClienteCreatePayload>(formVazio);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
+  const [detalhe, setDetalhe] = useState<ClienteDetalhe | null>(null);
+  const [carregandoDetalhe, setCarregandoDetalhe] = useState(false);
+
+  const fmtMoeda = (n: number) =>
+    n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const fmtData = (s: string) =>
+    new Date(s).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  async function abrirDetalhe(c: Cliente) {
+    setCarregandoDetalhe(true);
+    setDetalhe(null);
+    try {
+      const { data } = await getClienteDetalhe(c.id);
+      setDetalhe(data);
+    } catch {
+      // ignora erro na demo
+    } finally {
+      setCarregandoDetalhe(false);
+    }
+  }
 
   useEffect(() => {
     getClientes().then((r) => setClientes(r.data)).catch(() => {});
@@ -85,7 +111,11 @@ export default function Clientes() {
           <p className="text-gray-400 text-sm col-span-3">Nenhum cliente cadastrado ainda.</p>
         ) : (
           clientes.map((c) => (
-            <div key={c.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <div
+              key={c.id}
+              onClick={() => abrirDetalhe(c)}
+              className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md hover:border-accent/40 transition-all"
+            >
               <div className="flex items-start justify-between mb-2">
                 <div className="font-bold text-sidebar text-sm">{c.nome}</div>
                 <span className={`text-xs font-semibold px-2 py-1 rounded-full ${tipoColor[c.tipo]}`}>
@@ -115,7 +145,10 @@ export default function Clientes() {
                   {c.atendido_por_ia ? '🤖 IA' : '👤 Manual'}
                 </span>
                 <button
-                  onClick={() => toggleIA(c)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleIA(c);
+                  }}
                   className="text-xs font-semibold text-accent hover:underline"
                 >
                   {c.atendido_por_ia ? 'Mudar p/ Manual' : 'Mudar p/ IA'}
@@ -125,6 +158,7 @@ export default function Clientes() {
                 href={`https://wa.me/${c.whatsapp}`}
                 target="_blank"
                 rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
                 className="text-xs font-semibold text-accent hover:underline"
               >
                 📱 {c.whatsapp}
@@ -220,6 +254,103 @@ export default function Clientes() {
                 {salvando ? 'Salvando...' : 'Salvar cliente'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {(detalhe || carregandoDetalhe) && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setDetalhe(null);
+            setCarregandoDetalhe(false);
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {carregandoDetalhe || !detalhe ? (
+              <p className="text-gray-400 text-sm py-8 text-center">Carregando...</p>
+            ) : (
+              <>
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-extrabold text-sidebar">{detalhe.cliente.nome}</h2>
+                    <span className={`inline-block mt-1 text-xs font-semibold px-2 py-1 rounded-full ${tipoColor[detalhe.cliente.tipo]}`}>
+                      {tipoLabel[detalhe.cliente.tipo]}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setDetalhe(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-1 mb-5 text-sm text-gray-600">
+                  <div>📱 {detalhe.cliente.whatsapp}</div>
+                  {detalhe.cliente.cidade && <div>📍 {detalhe.cliente.cidade}</div>}
+                  {detalhe.cliente.cnpj && <div>🏢 CNPJ {detalhe.cliente.cnpj}</div>}
+                  <div className="flex gap-4 pt-2">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wide text-gray-400">Pedidos</div>
+                      <div className="text-sm font-bold text-sidebar">{detalhe.cliente.total_pedidos}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wide text-gray-400">Total comprado</div>
+                      <div className="text-sm font-bold text-accent">{fmtMoeda(detalhe.cliente.valor_total_comprado)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <h3 className="text-sm font-extrabold text-sidebar mb-2">Pedidos</h3>
+                  {detalhe.pedidos.length === 0 ? (
+                    <p className="text-gray-400 text-sm">Nenhum pedido.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {detalhe.pedidos.map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex items-center justify-between border border-gray-100 rounded-xl px-3 py-2"
+                        >
+                          <div>
+                            <div className="text-sm font-bold text-sidebar">#{p.id} · {fmtMoeda(p.valor_total)}</div>
+                            <div className="text-xs text-gray-400">{fmtData(p.created_at)}</div>
+                          </div>
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                            {p.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-extrabold text-sidebar mb-2">Conversas</h3>
+                  {detalhe.conversas.length === 0 ? (
+                    <p className="text-gray-400 text-sm">Nenhuma conversa.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {detalhe.conversas.map((conv) => (
+                        <div
+                          key={conv.id}
+                          className="flex items-center justify-between border border-gray-100 rounded-xl px-3 py-2"
+                        >
+                          <span className="text-sm text-gray-600">Conversa #{conv.id}</span>
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                            {conversaStatusLabel[conv.status] ?? conv.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

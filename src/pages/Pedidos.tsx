@@ -1,5 +1,5 @@
 import { useEffect, useState, FormEvent } from 'react';
-import { getPedidos, mudarStatusPedido, getClientes, criarPedido, getProdutos, ItemPedidoInput } from '../api/client';
+import { getPedidos, mudarStatusPedido, getClientes, criarPedido, getProdutos, gerarPagamento, marcarPago, ItemPedidoInput } from '../api/client';
 import { Pedido, ItemPedido, Cliente, Produto } from '../types';
 
 const STATUS_OPCOES: Pedido['status'][] = ['confirmado', 'negociando', 'aguardando', 'entregue'];
@@ -31,6 +31,9 @@ export default function Pedidos() {
   const [itens, setItens] = useState<ItemPedidoInput[]>([{ ...itemVazio }]);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
+  const [pagamentoPedido, setPagamentoPedido] = useState<Pedido | null>(null);
+  const [gerandoPagamento, setGerandoPagamento] = useState(false);
+  const [copiado, setCopiado] = useState(false);
 
   function carregarPedidos() {
     getPedidos().then((r) => setPedidos(r.data)).catch(() => {});
@@ -54,6 +57,44 @@ export default function Pedidos() {
     } catch {
       // ignora erro na demo
     }
+  }
+
+  function atualizarPedido(p: Pedido) {
+    setPedidos((prev) => prev.map((x) => (x.id === p.id ? p : x)));
+    setPagamentoPedido((prev) => (prev && prev.id === p.id ? p : prev));
+  }
+
+  async function handleGerarPagamento(p: Pedido, metodo: 'pix' | 'boleto') {
+    setGerandoPagamento(true);
+    setCopiado(false);
+    try {
+      const r = await gerarPagamento(p.id, metodo);
+      atualizarPedido(r.data);
+      setPagamentoPedido(r.data);
+    } catch {
+      // ignora erro na demo
+    } finally {
+      setGerandoPagamento(false);
+    }
+  }
+
+  async function handleMarcarPago(p: Pedido) {
+    try {
+      const r = await marcarPago(p.id);
+      atualizarPedido(r.data);
+    } catch {
+      // ignora erro na demo
+    }
+  }
+
+  function copiar(texto: string) {
+    navigator.clipboard?.writeText(texto).then(
+      () => {
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      },
+      () => {}
+    );
   }
 
   function atualizarItem(idx: number, campo: keyof ItemPedidoInput, valor: string) {
@@ -135,13 +176,14 @@ export default function Pedidos() {
               <th className="px-5 py-3 text-left">Valor</th>
               <th className="px-5 py-3 text-left">Origem</th>
               <th className="px-5 py-3 text-left">Status</th>
+              <th className="px-5 py-3 text-left">Pagamento</th>
               <th className="px-5 py-3 text-left">Data</th>
             </tr>
           </thead>
           <tbody>
             {pedidos.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center text-gray-400 py-8">Nenhum pedido ainda.</td>
+                <td colSpan={8} className="text-center text-gray-400 py-8">Nenhum pedido ainda.</td>
               </tr>
             ) : (
               pedidos.map((p) => {
@@ -182,6 +224,54 @@ export default function Pedidos() {
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex flex-col gap-1.5 items-start">
+                        {p.pago ? (
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">Pago</span>
+                        ) : p.metodo_pagamento ? (
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">Pendente</span>
+                        ) : (
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-500">—</span>
+                        )}
+                        <div className="flex flex-wrap gap-1.5">
+                          {!p.metodo_pagamento && (
+                            <>
+                              <button
+                                onClick={() => handleGerarPagamento(p, 'pix')}
+                                className="text-[11px] font-semibold text-accent hover:underline"
+                              >
+                                Gerar Pix
+                              </button>
+                              <button
+                                onClick={() => handleGerarPagamento(p, 'boleto')}
+                                className="text-[11px] font-semibold text-accent hover:underline"
+                              >
+                                Gerar Boleto
+                              </button>
+                            </>
+                          )}
+                          {p.metodo_pagamento && (
+                            <button
+                              onClick={() => {
+                                setCopiado(false);
+                                setPagamentoPedido(p);
+                              }}
+                              className="text-[11px] font-semibold text-accent hover:underline"
+                            >
+                              Ver código
+                            </button>
+                          )}
+                          {p.metodo_pagamento && !p.pago && (
+                            <button
+                              onClick={() => handleMarcarPago(p)}
+                              className="text-[11px] font-semibold text-green-700 hover:underline"
+                            >
+                              Marcar como pago
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-5 py-3 text-gray-400">{fmtDate(p.created_at)}</td>
                   </tr>
@@ -295,6 +385,81 @@ export default function Pedidos() {
                 {salvando ? 'Salvando...' : 'Salvar pedido'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {pagamentoPedido && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setPagamentoPedido(null)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-extrabold text-sidebar">
+                Pagamento · Pedido #{pagamentoPedido.id}
+              </h2>
+              <button onClick={() => setPagamentoPedido(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+
+            {pagamentoPedido.metodo_pagamento && (
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-orange-50 text-accent uppercase">
+                  {pagamentoPedido.metodo_pagamento}
+                </span>
+                {pagamentoPedido.pago ? (
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">Pago</span>
+                ) : (
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">Pendente</span>
+                )}
+              </div>
+            )}
+
+            {gerandoPagamento ? (
+              <p className="text-gray-400 text-sm py-4 text-center">Gerando...</p>
+            ) : pagamentoPedido.link_pagamento ? (
+              <>
+                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                  {pagamentoPedido.metodo_pagamento === 'boleto' ? 'Linha digitável' : 'Pix copia-e-cola'}
+                </label>
+                <div className="bg-bg border border-gray-200 rounded-xl p-3 text-xs text-gray-700 break-all font-mono">
+                  {pagamentoPedido.link_pagamento}
+                </div>
+                <button
+                  onClick={() => copiar(pagamentoPedido.link_pagamento || '')}
+                  className="mt-3 w-full bg-accent text-white font-bold py-2.5 rounded-xl hover:bg-orange-700 transition-colors"
+                >
+                  {copiado ? 'Copiado!' : 'Copiar código'}
+                </button>
+              </>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleGerarPagamento(pagamentoPedido, 'pix')}
+                  className="flex-1 bg-accent text-white font-bold py-2.5 rounded-xl hover:bg-orange-700 transition-colors"
+                >
+                  Gerar Pix
+                </button>
+                <button
+                  onClick={() => handleGerarPagamento(pagamentoPedido, 'boleto')}
+                  className="flex-1 bg-sidebar text-white font-bold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  Gerar Boleto
+                </button>
+              </div>
+            )}
+
+            {pagamentoPedido.metodo_pagamento && !pagamentoPedido.pago && (
+              <button
+                onClick={() => handleMarcarPago(pagamentoPedido)}
+                className="mt-3 w-full border border-green-600 text-green-700 font-bold py-2.5 rounded-xl hover:bg-green-50 transition-colors"
+              >
+                Marcar como pago
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getConversas, getMensagens, assumirConversa, enviarMensagem } from '../api/client';
+import { getConversas, getMensagens, assumirConversa, enviarMensagem, encerrarConversa } from '../api/client';
 import { Conversa, Mensagem } from '../types';
 
 const statusLabel: Record<string, string> = {
@@ -31,6 +31,19 @@ export default function Conversas() {
     setConversas((prev) =>
       prev.map((c) => (c.id === selected.id ? { ...c, status: 'humano' } : c))
     );
+  }
+
+  async function encerrar() {
+    if (!selected) return;
+    try {
+      await encerrarConversa(selected.id);
+      const id = selected.id;
+      setConversas((prev) => prev.filter((c) => c.id !== id));
+      setSelected(null);
+      setMensagens([]);
+    } catch {
+      // ignora erro na demo
+    }
   }
 
   async function enviar() {
@@ -81,14 +94,24 @@ export default function Conversas() {
                 <div className="font-bold text-sidebar">{selected.cliente_nome}</div>
                 <div className="text-xs text-gray-400">{statusLabel[selected.status]}</div>
               </div>
-              {selected.status === 'agente' && (
-                <button
-                  onClick={assumir}
-                  className="bg-accent text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-orange-700 transition-colors"
-                >
-                  Assumir atendimento
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {selected.status === 'agente' && (
+                  <button
+                    onClick={assumir}
+                    className="bg-accent text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-orange-700 transition-colors"
+                  >
+                    Assumir atendimento
+                  </button>
+                )}
+                {selected.status !== 'encerrada' && (
+                  <button
+                    onClick={encerrar}
+                    className="bg-gray-100 text-gray-600 text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Encerrar atendimento
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {mensagens.map((m) => (

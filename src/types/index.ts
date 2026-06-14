@@ -42,6 +42,9 @@ export interface Pedido {
   origem: 'ia' | 'humano';
   status: 'confirmado' | 'negociando' | 'aguardando' | 'entregue';
   created_at: string;
+  metodo_pagamento: string | null;
+  pago: boolean;
+  link_pagamento: string | null;
 }
 
 export interface Produto {
@@ -51,6 +54,12 @@ export interface Produto {
   preco_kg: number;
   ativo: boolean;
   created_at: string;
+}
+
+export interface ClienteDetalhe {
+  cliente: Cliente;
+  pedidos: Pedido[];
+  conversas: Conversa[];
 }
 
 export interface DashboardOverview {

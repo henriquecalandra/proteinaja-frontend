@@ -71,6 +71,8 @@ export const getOverview = () => api.get('/dashboard/overview');
 export const getConversas = () => api.get('/conversations/');
 export const getMensagens = (id: number) => api.get(`/conversations/${id}/messages`);
 export const assumirConversa = (id: number) => api.post(`/conversations/${id}/assume`);
+export const encerrarConversa = (id: number) => api.post(`/conversations/${id}/close`);
+export const getClienteDetalhe = (id: number) => api.get(`/clients/${id}`);
 export const enviarMensagem = (conversaId: number, texto: string) =>
   api.post(`/conversations/${conversaId}/messages`, { texto });
 export const getPedidos = () => api.get('/orders/');
@@ -91,6 +93,10 @@ export interface ProdutoUpdatePayload {
   categoria?: string | null;
   ativo?: boolean;
 }
+
+export const gerarPagamento = (pedidoId: number, metodo: 'pix' | 'boleto') =>
+  api.post(`/orders/${pedidoId}/payment`, { metodo });
+export const marcarPago = (pedidoId: number) => api.post(`/orders/${pedidoId}/pay`);
 
 export const getProdutos = () => api.get('/products/');
 export const criarProduto = (payload: ProdutoCreatePayload) =>
