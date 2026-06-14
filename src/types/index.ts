@@ -69,3 +69,33 @@ export interface DashboardOverview {
   volume_hoje: number;
   pct_agente: number;
 }
+
+export interface Empresa {
+  id: number;
+  nome: string;
+  cnpj: string | null;
+  cidade: string | null;
+  plano: string;
+  ativo: boolean;
+  whatsapp_numero: string | null;
+  evolution_url: string | null;
+  evolution_instance: string | null;
+  whatsapp_conectado: boolean;
+  created_at: string;
+}
+
+export interface UsuarioMe {
+  id: number;
+  nome: string;
+  email: string;
+  role: 'admin' | 'empresa';
+  empresa_id: number | null;
+}
+
+export interface AdminOverview {
+  total_empresas: number;
+  empresas_ativas: number;
+  total_pedidos_plataforma: number;
+  gmv_plataforma: number;
+  total_clientes: number;
+}

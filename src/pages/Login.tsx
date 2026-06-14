@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, register } from '../api/client';
+import { login, register, getMe } from '../api/client';
 import { AxiosError } from 'axios';
 
 export default function Login() {
@@ -25,12 +25,22 @@ export default function Login() {
       if (modo === 'cadastro') {
         const { data } = await register(nome, email, senha);
         localStorage.setItem('token', data.access_token);
-        navigate('/');
       } else {
         const { data } = await login(email, senha);
         localStorage.setItem('token', data.access_token);
-        navigate('/');
       }
+      try {
+        const { data: me } = await getMe();
+        localStorage.setItem('role', me.role ?? 'empresa');
+        if (me.empresa_id != null) {
+          localStorage.setItem('empresa_id', String(me.empresa_id));
+        } else {
+          localStorage.removeItem('empresa_id');
+        }
+      } catch {
+        // demo: segue mesmo sem /auth/me
+      }
+      navigate('/');
     } catch (err) {
       if (modo === 'cadastro') {
         const status = (err as AxiosError)?.response?.status;

@@ -9,6 +9,14 @@ const links = [
 ];
 
 export default function Sidebar() {
+  const role = localStorage.getItem('role');
+
+  const itens = [
+    ...links,
+    ...(role === 'admin' ? [{ to: '/admin', label: 'Plataforma', icon: '🏢' }] : []),
+    { to: '/configuracoes', label: 'Configurações', icon: '⚙️' },
+  ];
+
   return (
     <aside className="w-60 min-h-screen bg-sidebar flex flex-col">
       <div className="px-6 py-6 border-b border-white/10">
@@ -16,7 +24,7 @@ export default function Sidebar() {
         <div className="text-white/50 text-xs mt-1">Frigorífico São Lucas</div>
       </div>
       <nav className="flex-1 py-4">
-        {links.map((l) => (
+        {itens.map((l) => (
           <NavLink
             key={l.to}
             to={l.to}
@@ -36,7 +44,12 @@ export default function Sidebar() {
       </nav>
       <div className="px-6 py-4 border-t border-white/10">
         <button
-          onClick={() => { localStorage.removeItem('token'); window.location.href = '/login'; }}
+          onClick={() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('empresa_id');
+            window.location.href = '/login';
+          }}
           className="text-white/40 text-xs hover:text-white/60 transition-colors"
         >
           Sair

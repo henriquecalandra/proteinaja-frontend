@@ -104,4 +104,22 @@ export const criarProduto = (payload: ProdutoCreatePayload) =>
 export const atualizarProduto = (id: number, payload: ProdutoUpdatePayload) =>
   api.patch(`/products/${id}`, payload);
 
+export interface EmpresaUpdatePayload {
+  nome?: string;
+  cnpj?: string | null;
+  cidade?: string | null;
+  whatsapp_numero?: string | null;
+  evolution_url?: string | null;
+  evolution_instance?: string | null;
+}
+
+export const getMe = () => api.get('/auth/me');
+export const getAdminOverview = () => api.get('/admin/overview');
+export const getAdminCompanies = () => api.get('/admin/companies');
+export const getCompany = () => api.get('/company');
+export const atualizarEmpresa = (payload: EmpresaUpdatePayload) =>
+  api.patch('/company', payload);
+export const conectarWhatsapp = () => api.post('/company/whatsapp/connect');
+export const desconectarWhatsapp = () => api.post('/company/whatsapp/disconnect');
+
 export default api;
