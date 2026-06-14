@@ -20,4 +20,4 @@ jobs:
             cd /home/opc/proteinaja-frontend
             git pull origin main
             cd /home/opc/proteinaja-backend
-            docker compose up -d --build frontend nginx
+            sudo docker compose up -d --build frontend nginx
