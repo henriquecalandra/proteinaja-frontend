@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { getCompany } from '../api/client';
 
 const links = [
   { to: '/', label: 'Início', icon: '📊' },
@@ -10,6 +12,27 @@ const links = [
 
 export default function Sidebar() {
   const role = localStorage.getItem('role');
+  const [empresaNome, setEmpresaNome] = useState(
+    role === 'admin' ? 'Plataforma ProteínaJá' : 'Frigorífico São Lucas'
+  );
+
+  useEffect(() => {
+    if (role === 'admin') {
+      setEmpresaNome('Plataforma ProteínaJá');
+      return;
+    }
+    let ativo = true;
+    getCompany()
+      .then(({ data }) => {
+        if (ativo && data?.nome) setEmpresaNome(data.nome);
+      })
+      .catch(() => {
+        // defensivo: mantém fallback
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [role]);
 
   const itens = [
     ...links,
@@ -21,7 +44,7 @@ export default function Sidebar() {
     <aside className="w-60 min-h-screen bg-sidebar flex flex-col">
       <div className="px-6 py-6 border-b border-white/10">
         <div className="text-white font-extrabold text-lg leading-tight">🥩 ProteínaJá</div>
-        <div className="text-white/50 text-xs mt-1">Frigorífico São Lucas</div>
+        <div className="text-white/50 text-xs mt-1">{empresaNome}</div>
       </div>
       <nav className="flex-1 py-4">
         {itens.map((l) => (
