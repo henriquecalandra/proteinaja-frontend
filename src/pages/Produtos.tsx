@@ -16,11 +16,19 @@ const categoriaColor: Record<string, string> = {
 
 const categoriaOpcoes = ['Bovino', 'Suino', 'Aves', 'Embutidos'];
 
+const unidadeOpcoes = ['kg', 'un', 'cx'];
+
 interface FormState {
   nome: string;
   categoria: string;
   preco_kg: number;
   ativo: boolean;
+  sku: string;
+  unidade: string;
+  preco_custo: number;
+  estoque: number;
+  estoque_minimo: number;
+  descricao: string;
 }
 
 const formVazio: FormState = {
@@ -28,6 +36,12 @@ const formVazio: FormState = {
   categoria: '',
   preco_kg: 0,
   ativo: true,
+  sku: '',
+  unidade: 'kg',
+  preco_custo: 0,
+  estoque: 0,
+  estoque_minimo: 0,
+  descricao: '',
 };
 
 export default function Produtos() {
@@ -49,6 +63,11 @@ export default function Produtos() {
   const fmt = (n: number) =>
     n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+  const margem = (p: Produto) =>
+    p.preco_custo && p.preco_custo > 0 && p.preco_kg > 0
+      ? `${(((p.preco_kg - p.preco_custo) / p.preco_kg) * 100).toFixed(0)}%`
+      : '—';
+
   function abrirNovo() {
     setEditando(null);
     setForm(formVazio);
@@ -63,6 +82,12 @@ export default function Produtos() {
       categoria: p.categoria ?? '',
       preco_kg: p.preco_kg,
       ativo: p.ativo,
+      sku: p.sku ?? '',
+      unidade: p.unidade ?? 'kg',
+      preco_custo: p.preco_custo ?? 0,
+      estoque: p.estoque ?? 0,
+      estoque_minimo: p.estoque_minimo ?? 0,
+      descricao: p.descricao ?? '',
     });
     setErro('');
     setMostrarForm(true);
@@ -87,6 +112,12 @@ export default function Produtos() {
           categoria: form.categoria || null,
           preco_kg: form.preco_kg,
           ativo: form.ativo,
+          sku: form.sku.trim() || null,
+          unidade: form.unidade,
+          preco_custo: form.preco_custo > 0 ? form.preco_custo : null,
+          estoque: form.estoque,
+          estoque_minimo: form.estoque_minimo,
+          descricao: form.descricao.trim() || null,
         });
         setProdutos((prev) => prev.map((x) => (x.id === editando.id ? data : x)));
       } else {
@@ -95,6 +126,12 @@ export default function Produtos() {
           preco_kg: form.preco_kg,
           categoria: form.categoria || null,
           ativo: form.ativo,
+          sku: form.sku.trim() || null,
+          unidade: form.unidade,
+          preco_custo: form.preco_custo > 0 ? form.preco_custo : null,
+          estoque: form.estoque,
+          estoque_minimo: form.estoque_minimo,
+          descricao: form.descricao.trim() || null,
         };
         const { data } = await criarProduto(payload);
         setProdutos((prev) =>
@@ -130,8 +167,12 @@ export default function Produtos() {
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
               <th className="px-5 py-3 text-left">Produto</th>
+              <th className="px-5 py-3 text-left">SKU</th>
               <th className="px-5 py-3 text-left">Categoria</th>
+              <th className="px-5 py-3 text-left">Un.</th>
+              <th className="px-5 py-3 text-left">Estoque</th>
               <th className="px-5 py-3 text-left">Preço (R$/kg)</th>
+              <th className="px-5 py-3 text-left">Margem</th>
               <th className="px-5 py-3 text-left">Status</th>
               <th className="px-5 py-3 text-right">Ações</th>
             </tr>
@@ -139,7 +180,7 @@ export default function Produtos() {
           <tbody>
             {produtos.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center text-gray-400 py-8">
+                <td colSpan={9} className="text-center text-gray-400 py-8">
                   Nenhum produto cadastrado ainda.
                 </td>
               </tr>
@@ -150,6 +191,9 @@ export default function Produtos() {
                   className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
                 >
                   <td className="px-5 py-3 font-bold text-sidebar">{p.nome}</td>
+                  <td className="px-5 py-3 text-gray-500">
+                    {p.sku ? p.sku : <span className="text-gray-300">—</span>}
+                  </td>
                   <td className="px-5 py-3">
                     {p.categoria ? (
                       <span
@@ -163,7 +207,21 @@ export default function Produtos() {
                       <span className="text-gray-300">—</span>
                     )}
                   </td>
+                  <td className="px-5 py-3 text-gray-500 uppercase">{p.unidade}</td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sidebar">
+                        {p.estoque.toLocaleString('pt-BR')}
+                      </span>
+                      {p.estoque <= p.estoque_minimo && (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700 whitespace-nowrap">
+                          Estoque baixo
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-5 py-3 font-bold text-accent">{fmt(p.preco_kg)}</td>
+                  <td className="px-5 py-3 font-semibold text-gray-600">{margem(p)}</td>
                   <td className="px-5 py-3">
                     <span
                       className={`text-xs font-semibold px-2 py-1 rounded-full ${
@@ -219,6 +277,31 @@ export default function Produtos() {
                   className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-1">SKU</label>
+                  <input
+                    type="text"
+                    value={form.sku}
+                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-1">Unidade</label>
+                  <select
+                    value={form.unidade}
+                    onChange={(e) => setForm({ ...form, unidade: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                  >
+                    {unidadeOpcoes.map((u) => (
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-600 mb-1">Categoria</label>
                 <select
@@ -234,18 +317,70 @@ export default function Produtos() {
                   ))}
                 </select>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-1">
+                    Preço (R$/kg)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.preco_kg || ''}
+                    onChange={(e) => setForm({ ...form, preco_kg: Number(e.target.value) })}
+                    required
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-1">
+                    Preço de custo
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.preco_custo || ''}
+                    onChange={(e) => setForm({ ...form, preco_custo: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-1">Estoque</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.estoque || ''}
+                    onChange={(e) => setForm({ ...form, estoque: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-1">
+                    Estoque mínimo
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.estoque_minimo || ''}
+                    onChange={(e) =>
+                      setForm({ ...form, estoque_minimo: Number(e.target.value) })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                  />
+                </div>
+              </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-600 mb-1">
-                  Preço (R$/kg)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.preco_kg || ''}
-                  onChange={(e) => setForm({ ...form, preco_kg: Number(e.target.value) })}
-                  required
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                <label className="block text-sm font-semibold text-gray-600 mb-1">Descrição</label>
+                <textarea
+                  value={form.descricao}
+                  onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent resize-none"
                 />
               </div>
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">

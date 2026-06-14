@@ -54,6 +54,12 @@ export interface Produto {
   preco_kg: number;
   ativo: boolean;
   created_at: string;
+  sku: string | null;
+  unidade: string;
+  estoque: number;
+  estoque_minimo: number;
+  preco_custo: number | null;
+  descricao: string | null;
 }
 
 export interface ClienteDetalhe {

@@ -96,6 +96,12 @@ export interface ProdutoCreatePayload {
   preco_kg: number;
   categoria?: string | null;
   ativo?: boolean;
+  sku?: string | null;
+  unidade?: string;
+  estoque?: number;
+  estoque_minimo?: number;
+  preco_custo?: number | null;
+  descricao?: string | null;
 }
 
 export interface ProdutoUpdatePayload {
@@ -103,6 +109,12 @@ export interface ProdutoUpdatePayload {
   preco_kg?: number;
   categoria?: string | null;
   ativo?: boolean;
+  sku?: string | null;
+  unidade?: string;
+  estoque?: number;
+  estoque_minimo?: number;
+  preco_custo?: number | null;
+  descricao?: string | null;
 }
 
 export const gerarPagamento = (pedidoId: number, metodo: 'pix' | 'boleto') =>
