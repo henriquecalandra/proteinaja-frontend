@@ -1,24 +1,43 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api/client';
+import { login, register } from '../api/client';
+import { AxiosError } from 'axios';
 
 export default function Login() {
+  const [modo, setModo] = useState<'entrar' | 'cadastro'>('entrar');
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  function alternarModo() {
+    setModo((m) => (m === 'entrar' ? 'cadastro' : 'entrar'));
+    setErro('');
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setErro('');
     setLoading(true);
     try {
-      const { data } = await login(email, senha);
-      localStorage.setItem('token', data.access_token);
-      navigate('/');
-    } catch {
-      setErro('E-mail ou senha incorretos.');
+      if (modo === 'cadastro') {
+        const { data } = await register(nome, email, senha);
+        localStorage.setItem('token', data.access_token);
+        navigate('/');
+      } else {
+        const { data } = await login(email, senha);
+        localStorage.setItem('token', data.access_token);
+        navigate('/');
+      }
+    } catch (err) {
+      if (modo === 'cadastro') {
+        const status = (err as AxiosError)?.response?.status;
+        setErro(status === 409 ? 'Este e-mail já está cadastrado.' : 'Não foi possível criar a conta.');
+      } else {
+        setErro('E-mail ou senha incorretos.');
+      }
     } finally {
       setLoading(false);
     }
@@ -47,10 +66,29 @@ export default function Login() {
       {/* Right: form */}
       <div className="flex-1 flex items-center justify-center px-8 bg-bg">
         <div className="w-full max-w-sm">
-          <div className="text-sidebar font-extrabold text-2xl mb-1">Bem-vindo</div>
-          <div className="text-gray-400 text-sm mb-8">Entre com sua conta do frigorífico</div>
+          <div className="text-sidebar font-extrabold text-2xl mb-1">
+            {modo === 'entrar' ? 'Bem-vindo' : 'Criar conta'}
+          </div>
+          <div className="text-gray-400 text-sm mb-8">
+            {modo === 'entrar'
+              ? 'Entre com sua conta do frigorífico'
+              : 'Cadastre-se para acessar o painel'}
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {modo === 'cadastro' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">Nome</label>
+                <input
+                  type="text"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  placeholder="Seu nome"
+                />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-semibold text-gray-600 mb-1">E-mail</label>
               <input
@@ -79,9 +117,26 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-accent text-white font-bold py-3 rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-60"
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading
+                ? modo === 'cadastro'
+                  ? 'Criando...'
+                  : 'Entrando...'
+                : modo === 'cadastro'
+                ? 'Criar conta'
+                : 'Entrar'}
             </button>
           </form>
+
+          <div className="text-center text-sm text-gray-400 mt-6">
+            {modo === 'entrar' ? 'Ainda não tem conta?' : 'Já tem uma conta?'}{' '}
+            <button
+              type="button"
+              onClick={alternarModo}
+              className="font-semibold text-accent hover:underline"
+            >
+              {modo === 'entrar' ? 'Criar conta' : 'Entrar'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

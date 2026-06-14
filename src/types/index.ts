@@ -9,6 +9,7 @@ export interface Cliente {
   cnpj: string | null;
   total_pedidos: number;
   valor_total_comprado: number;
+  atendido_por_ia: boolean;
 }
 
 export interface Mensagem {

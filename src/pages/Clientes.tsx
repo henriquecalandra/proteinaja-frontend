@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getClientes } from '../api/client';
+import { useEffect, useState, FormEvent } from 'react';
+import { getClientes, criarCliente, atualizarCliente, ClienteCreatePayload } from '../api/client';
 import { Cliente } from '../types';
 
 const tipoLabel: Record<string, string> = {
@@ -16,16 +16,70 @@ const tipoColor: Record<string, string> = {
   food_service: 'bg-green-100 text-green-700',
 };
 
+const tipoOpcoes: Cliente['tipo'][] = ['acougue', 'restaurante', 'mercadinho', 'food_service'];
+
+const formVazio: ClienteCreatePayload = {
+  nome: '',
+  whatsapp: '',
+  tipo: 'acougue',
+  cnpj: '',
+  cidade: '',
+  atendido_por_ia: true,
+};
+
 export default function Clientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [form, setForm] = useState<ClienteCreatePayload>(formVazio);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState('');
 
   useEffect(() => {
     getClientes().then((r) => setClientes(r.data)).catch(() => {});
   }, []);
 
+  async function handleSalvar(e: FormEvent) {
+    e.preventDefault();
+    setErro('');
+    setSalvando(true);
+    try {
+      const payload: ClienteCreatePayload = {
+        ...form,
+        cnpj: form.cnpj || null,
+        cidade: form.cidade || null,
+      };
+      const { data } = await criarCliente(payload);
+      setClientes((prev) => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)));
+      setForm(formVazio);
+      setMostrarForm(false);
+    } catch (err: any) {
+      setErro(err?.response?.status === 409 ? 'WhatsApp já cadastrado.' : 'Não foi possível salvar.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function toggleIA(c: Cliente) {
+    try {
+      const { data } = await atualizarCliente(c.id, { atendido_por_ia: !c.atendido_por_ia });
+      setClientes((prev) => prev.map((x) => (x.id === c.id ? data : x)));
+    } catch {
+      // ignora erro na demo
+    }
+  }
+
   return (
     <div className="p-8">
-      <h1 className="text-xl font-extrabold text-sidebar mb-6">Clientes</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-extrabold text-sidebar">Clientes</h1>
+        <button
+          onClick={() => setMostrarForm(true)}
+          className="bg-accent text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-orange-700 transition-colors"
+        >
+          + Novo cliente
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {clientes.length === 0 ? (
           <p className="text-gray-400 text-sm col-span-3">Nenhum cliente cadastrado ainda.</p>
@@ -52,6 +106,21 @@ export default function Clientes() {
                   </div>
                 </div>
               </div>
+              <div className="flex items-center justify-between mb-3">
+                <span
+                  className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                    c.atendido_por_ia ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {c.atendido_por_ia ? '🤖 IA' : '👤 Manual'}
+                </span>
+                <button
+                  onClick={() => toggleIA(c)}
+                  className="text-xs font-semibold text-accent hover:underline"
+                >
+                  {c.atendido_por_ia ? 'Mudar p/ Manual' : 'Mudar p/ IA'}
+                </button>
+              </div>
               <a
                 href={`https://wa.me/${c.whatsapp}`}
                 target="_blank"
@@ -67,6 +136,93 @@ export default function Clientes() {
           ))
         )}
       </div>
+
+      {mostrarForm && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setMostrarForm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-extrabold text-sidebar">Novo cliente</h2>
+              <button onClick={() => setMostrarForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <form onSubmit={handleSalvar} className="space-y-3">
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">Nome</label>
+                <input
+                  type="text"
+                  value={form.nome}
+                  onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                  required
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">WhatsApp</label>
+                <input
+                  type="text"
+                  value={form.whatsapp}
+                  onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+                  required
+                  placeholder="5562999990000"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">CNPJ</label>
+                <input
+                  type="text"
+                  value={form.cnpj ?? ''}
+                  onChange={(e) => setForm({ ...form, cnpj: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">Tipo</label>
+                <select
+                  value={form.tipo}
+                  onChange={(e) => setForm({ ...form, tipo: e.target.value as Cliente['tipo'] })}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                >
+                  {tipoOpcoes.map((t) => (
+                    <option key={t} value={t}>{tipoLabel[t]}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">Cidade</label>
+                <input
+                  type="text"
+                  value={form.cidade ?? ''}
+                  onChange={(e) => setForm({ ...form, cidade: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={form.atendido_por_ia ?? true}
+                  onChange={(e) => setForm({ ...form, atendido_por_ia: e.target.checked })}
+                  className="h-4 w-4 accent-accent"
+                />
+                Atendido por IA
+              </label>
+              {erro && <p className="text-red-500 text-sm">{erro}</p>}
+              <button
+                type="submit"
+                disabled={salvando}
+                className="w-full bg-accent text-white font-bold py-2.5 rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-60"
+              >
+                {salvando ? 'Salvando...' : 'Salvar cliente'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

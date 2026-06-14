@@ -25,6 +25,48 @@ api.interceptors.response.use(
 export const login = (email: string, senha: string) =>
   api.post<{ access_token: string }>('/auth/login', { email, senha });
 
+export const register = (nome: string, email: string, senha: string) =>
+  api.post<{ access_token: string }>('/auth/register', { nome, email, senha });
+
+export interface ClienteCreatePayload {
+  nome: string;
+  whatsapp: string;
+  tipo: 'acougue' | 'restaurante' | 'mercadinho' | 'food_service';
+  cnpj?: string | null;
+  cidade?: string | null;
+  atendido_por_ia?: boolean;
+}
+
+export interface ClienteUpdatePayload {
+  nome?: string;
+  cnpj?: string | null;
+  cidade?: string | null;
+  tipo?: 'acougue' | 'restaurante' | 'mercadinho' | 'food_service';
+  ativo?: boolean;
+  atendido_por_ia?: boolean;
+}
+
+export interface ItemPedidoInput {
+  produto: string;
+  qtd_kg: number;
+  preco_kg: number;
+}
+
+export interface PedidoCreatePayload {
+  cliente_id: number;
+  itens: ItemPedidoInput[];
+  status?: 'confirmado' | 'negociando' | 'aguardando' | 'entregue';
+}
+
+export const criarCliente = (payload: ClienteCreatePayload) =>
+  api.post('/clients/', payload);
+
+export const atualizarCliente = (id: number, payload: ClienteUpdatePayload) =>
+  api.patch(`/clients/${id}`, payload);
+
+export const criarPedido = (payload: PedidoCreatePayload) =>
+  api.post('/orders/', payload);
+
 export const getOverview = () => api.get('/dashboard/overview');
 export const getConversas = () => api.get('/conversations/');
 export const getMensagens = (id: number) => api.get(`/conversations/${id}/messages`);

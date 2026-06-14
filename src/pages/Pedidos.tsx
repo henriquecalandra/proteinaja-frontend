@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { getPedidos, mudarStatusPedido } from '../api/client';
-import { Pedido, ItemPedido } from '../types';
+import { useEffect, useState, FormEvent } from 'react';
+import { getPedidos, mudarStatusPedido, getClientes, criarPedido, ItemPedidoInput } from '../api/client';
+import { Pedido, ItemPedido, Cliente } from '../types';
 
 const STATUS_OPCOES: Pedido['status'][] = ['confirmado', 'negociando', 'aguardando', 'entregue'];
 
@@ -20,15 +20,30 @@ const statusColors: Record<string, string> = {
   entregue: 'bg-blue-100 text-blue-700',
 };
 
+const itemVazio: ItemPedidoInput = { produto: '', qtd_kg: 0, preco_kg: 0 };
+
 export default function Pedidos() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [clienteId, setClienteId] = useState<number | ''>('');
+  const [itens, setItens] = useState<ItemPedidoInput[]>([{ ...itemVazio }]);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState('');
+
+  function carregarPedidos() {
+    getPedidos().then((r) => setPedidos(r.data)).catch(() => {});
+  }
 
   useEffect(() => {
-    getPedidos().then((r) => setPedidos(r.data)).catch(() => {});
+    carregarPedidos();
+    getClientes().then((r) => setClientes(r.data)).catch(() => {});
   }, []);
 
   const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const fmtDate = (s: string) => new Date(s).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+  const totalForm = itens.reduce((acc, it) => acc + (it.qtd_kg || 0) * (it.preco_kg || 0), 0);
 
   async function alterarStatus(p: Pedido, status: Pedido['status']) {
     try {
@@ -39,9 +54,64 @@ export default function Pedidos() {
     }
   }
 
+  function atualizarItem(idx: number, campo: keyof ItemPedidoInput, valor: string) {
+    setItens((prev) =>
+      prev.map((it, i) =>
+        i === idx ? { ...it, [campo]: campo === 'produto' ? valor : Number(valor) } : it
+      )
+    );
+  }
+
+  function adicionarItem() {
+    setItens((prev) => [...prev, { ...itemVazio }]);
+  }
+
+  function removerItem(idx: number) {
+    setItens((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
+  }
+
+  function abrirForm() {
+    setClienteId('');
+    setItens([{ ...itemVazio }]);
+    setErro('');
+    setMostrarForm(true);
+  }
+
+  async function handleSalvar(e: FormEvent) {
+    e.preventDefault();
+    setErro('');
+    if (clienteId === '') {
+      setErro('Selecione um cliente.');
+      return;
+    }
+    const itensValidos = itens.filter((it) => it.produto.trim() && it.qtd_kg > 0 && it.preco_kg > 0);
+    if (itensValidos.length === 0) {
+      setErro('Adicione ao menos um item válido.');
+      return;
+    }
+    setSalvando(true);
+    try {
+      await criarPedido({ cliente_id: Number(clienteId), itens: itensValidos });
+      setMostrarForm(false);
+      carregarPedidos();
+    } catch {
+      setErro('Não foi possível salvar o pedido.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   return (
     <div className="p-8">
-      <h1 className="text-xl font-extrabold text-sidebar mb-6">Pedidos</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-extrabold text-sidebar">Pedidos</h1>
+        <button
+          onClick={abrirForm}
+          className="bg-accent text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-orange-700 transition-colors"
+        >
+          + Novo pedido
+        </button>
+      </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
@@ -62,17 +132,17 @@ export default function Pedidos() {
               </tr>
             ) : (
               pedidos.map((p) => {
-                const itens = parseItens(p.itens_json);
+                const itensP = parseItens(p.itens_json);
                 return (
                   <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-3 font-bold text-sidebar">#{p.id}</td>
                     <td className="px-5 py-3 text-gray-600">{p.cliente_nome}</td>
                     <td className="px-5 py-3 text-gray-600">
-                      {itens.length === 0 ? (
+                      {itensP.length === 0 ? (
                         <span className="text-gray-300">—</span>
                       ) : (
                         <div className="flex flex-col gap-0.5">
-                          {itens.map((it, i) => (
+                          {itensP.map((it, i) => (
                             <span key={i} className="text-xs">
                               {it.produto} {it.qtd_kg}kg
                               <span className="text-gray-400"> · {fmt(it.preco_kg)}/kg</span>
@@ -108,6 +178,105 @@ export default function Pedidos() {
           </tbody>
         </table>
       </div>
+
+      {mostrarForm && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setMostrarForm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-extrabold text-sidebar">Novo pedido</h2>
+              <button onClick={() => setMostrarForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+            <form onSubmit={handleSalvar} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">Cliente</label>
+                <select
+                  value={clienteId}
+                  onChange={(e) => setClienteId(e.target.value === '' ? '' : Number(e.target.value))}
+                  required
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                >
+                  <option value="">Selecione...</option>
+                  {clientes.map((c) => (
+                    <option key={c.id} value={c.id}>{c.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-semibold text-gray-600">Itens</label>
+                  <button
+                    type="button"
+                    onClick={adicionarItem}
+                    className="text-xs font-semibold text-accent hover:underline"
+                  >
+                    + Adicionar item
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {itens.map((it, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={it.produto}
+                        onChange={(e) => atualizarItem(idx, 'produto', e.target.value)}
+                        placeholder="Produto"
+                        className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={it.qtd_kg || ''}
+                        onChange={(e) => atualizarItem(idx, 'qtd_kg', e.target.value)}
+                        placeholder="kg"
+                        className="w-20 px-2 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={it.preco_kg || ''}
+                        onChange={(e) => atualizarItem(idx, 'preco_kg', e.target.value)}
+                        placeholder="R$/kg"
+                        className="w-24 px-2 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removerItem(idx)}
+                        disabled={itens.length === 1}
+                        className="text-gray-400 hover:text-red-500 disabled:opacity-30 px-1"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                <span className="text-sm font-semibold text-gray-600">Total</span>
+                <span className="text-lg font-extrabold text-accent">{fmt(totalForm)}</span>
+              </div>
+
+              {erro && <p className="text-red-500 text-sm">{erro}</p>}
+              <button
+                type="submit"
+                disabled={salvando}
+                className="w-full bg-accent text-white font-bold py-2.5 rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-60"
+              >
+                {salvando ? 'Salvando...' : 'Salvar pedido'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
