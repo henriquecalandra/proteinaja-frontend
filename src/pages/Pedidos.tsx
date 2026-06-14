@@ -34,6 +34,9 @@ export default function Pedidos() {
   const [pagamentoPedido, setPagamentoPedido] = useState<Pedido | null>(null);
   const [gerandoPagamento, setGerandoPagamento] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [busca, setBusca] = useState('');
+  const [filtroStatus, setFiltroStatus] = useState<'todos' | Pedido['status']>('todos');
+  const [filtroPagamento, setFiltroPagamento] = useState<'todos' | 'pago' | 'pendente'>('todos');
 
   function carregarPedidos() {
     getPedidos().then((r) => setPedidos(r.data)).catch(() => {});
@@ -155,6 +158,16 @@ export default function Pedidos() {
     }
   }
 
+  const termo = busca.trim().toLowerCase();
+  const pedidosFiltrados = pedidos.filter((p) => {
+    const casaBusca = termo === '' || p.cliente_nome.toLowerCase().includes(termo);
+    const casaStatus = filtroStatus === 'todos' || p.status === filtroStatus;
+    const casaPagamento =
+      filtroPagamento === 'todos' ||
+      (filtroPagamento === 'pago' ? p.pago : !p.pago);
+    return casaBusca && casaStatus && casaPagamento;
+  });
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -166,6 +179,40 @@ export default function Pedidos() {
           + Novo pedido
         </button>
       </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <input
+          type="text"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar por cliente..."
+          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+        />
+        <select
+          value={filtroStatus}
+          onChange={(e) => setFiltroStatus(e.target.value as 'todos' | Pedido['status'])}
+          className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent sm:w-44"
+        >
+          <option value="todos">Todos os status</option>
+          {STATUS_OPCOES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          value={filtroPagamento}
+          onChange={(e) => setFiltroPagamento(e.target.value as 'todos' | 'pago' | 'pendente')}
+          className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent sm:w-44"
+        >
+          <option value="todos">Todos pagamentos</option>
+          <option value="pago">Pago</option>
+          <option value="pendente">Pendente</option>
+        </select>
+      </div>
+
+      <p className="text-xs font-semibold text-gray-400 mb-4">
+        {pedidosFiltrados.length} {pedidosFiltrados.length === 1 ? 'pedido' : 'pedidos'}
+      </p>
+
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
@@ -185,8 +232,12 @@ export default function Pedidos() {
               <tr>
                 <td colSpan={8} className="text-center text-gray-400 py-8">Nenhum pedido ainda.</td>
               </tr>
+            ) : pedidosFiltrados.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="text-center text-gray-400 py-8">Nenhum pedido encontrado para os filtros aplicados.</td>
+              </tr>
             ) : (
-              pedidos.map((p) => {
+              pedidosFiltrados.map((p) => {
                 const itensP = parseItens(p.itens_json);
                 return (
                   <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">

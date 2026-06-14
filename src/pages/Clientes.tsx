@@ -41,6 +41,8 @@ export default function Clientes() {
   const [erro, setErro] = useState('');
   const [detalhe, setDetalhe] = useState<ClienteDetalhe | null>(null);
   const [carregandoDetalhe, setCarregandoDetalhe] = useState(false);
+  const [busca, setBusca] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState<'todos' | Cliente['tipo']>('todos');
 
   const fmtMoeda = (n: number) =>
     n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -94,6 +96,17 @@ export default function Clientes() {
     }
   }
 
+  const termo = busca.trim().toLowerCase();
+  const clientesFiltrados = clientes.filter((c) => {
+    const casaBusca =
+      termo === '' ||
+      c.nome.toLowerCase().includes(termo) ||
+      (c.cidade ?? '').toLowerCase().includes(termo) ||
+      c.whatsapp.toLowerCase().includes(termo);
+    const casaTipo = filtroTipo === 'todos' || c.tipo === filtroTipo;
+    return casaBusca && casaTipo;
+  });
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -106,11 +119,37 @@ export default function Clientes() {
         </button>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <input
+          type="text"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar por nome, cidade ou WhatsApp..."
+          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+        />
+        <select
+          value={filtroTipo}
+          onChange={(e) => setFiltroTipo(e.target.value as 'todos' | Cliente['tipo'])}
+          className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent sm:w-52"
+        >
+          <option value="todos">Todos os tipos</option>
+          {tipoOpcoes.map((t) => (
+            <option key={t} value={t}>{tipoLabel[t]}</option>
+          ))}
+        </select>
+      </div>
+
+      <p className="text-xs font-semibold text-gray-400 mb-4">
+        {clientesFiltrados.length} {clientesFiltrados.length === 1 ? 'cliente' : 'clientes'}
+      </p>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {clientes.length === 0 ? (
           <p className="text-gray-400 text-sm col-span-3">Nenhum cliente cadastrado ainda.</p>
+        ) : clientesFiltrados.length === 0 ? (
+          <p className="text-gray-400 text-sm col-span-3">Nenhum cliente encontrado para os filtros aplicados.</p>
         ) : (
-          clientes.map((c) => (
+          clientesFiltrados.map((c) => (
             <div
               key={c.id}
               onClick={() => abrirDetalhe(c)}

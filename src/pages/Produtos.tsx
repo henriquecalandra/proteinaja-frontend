@@ -51,6 +51,9 @@ export default function Produtos() {
   const [form, setForm] = useState<FormState>(formVazio);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
+  const [busca, setBusca] = useState('');
+  const [filtroCategoria, setFiltroCategoria] = useState('todas');
+  const [somenteRuptura, setSomenteRuptura] = useState(false);
 
   function carregar() {
     getProdutos().then((r) => setProdutos(r.data)).catch(() => {});
@@ -150,6 +153,21 @@ export default function Produtos() {
     }
   }
 
+  const categoriasDisponiveis = Array.from(
+    new Set(produtos.map((p) => p.categoria).filter((c): c is string => !!c))
+  ).sort((a, b) => a.localeCompare(b));
+
+  const termo = busca.trim().toLowerCase();
+  const produtosFiltrados = produtos.filter((p) => {
+    const casaBusca =
+      termo === '' ||
+      p.nome.toLowerCase().includes(termo) ||
+      (p.sku ?? '').toLowerCase().includes(termo);
+    const casaCategoria = filtroCategoria === 'todas' || p.categoria === filtroCategoria;
+    const casaRuptura = !somenteRuptura || p.estoque <= p.estoque_minimo;
+    return casaBusca && casaCategoria && casaRuptura;
+  });
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -161,6 +179,39 @@ export default function Produtos() {
           + Novo produto
         </button>
       </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+        <input
+          type="text"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar por nome ou SKU..."
+          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
+        />
+        <select
+          value={filtroCategoria}
+          onChange={(e) => setFiltroCategoria(e.target.value)}
+          className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent sm:w-52"
+        >
+          <option value="todas">Todas as categorias</option>
+          {categoriasDisponiveis.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <label className="flex items-center gap-2 text-sm font-semibold text-gray-600 whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={somenteRuptura}
+            onChange={(e) => setSomenteRuptura(e.target.checked)}
+            className="h-4 w-4 accent-accent"
+          />
+          Somente em ruptura
+        </label>
+      </div>
+
+      <p className="text-xs font-semibold text-gray-400 mb-4">
+        {produtosFiltrados.length} {produtosFiltrados.length === 1 ? 'produto' : 'produtos'}
+      </p>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
@@ -184,8 +235,14 @@ export default function Produtos() {
                   Nenhum produto cadastrado ainda.
                 </td>
               </tr>
+            ) : produtosFiltrados.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="text-center text-gray-400 py-8">
+                  Nenhum produto encontrado para os filtros aplicados.
+                </td>
+              </tr>
             ) : (
-              produtos.map((p) => (
+              produtosFiltrados.map((p) => (
                 <tr
                   key={p.id}
                   className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
