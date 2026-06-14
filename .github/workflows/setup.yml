@@ -18,20 +18,20 @@ jobs:
           script: |
             set -e
 
-            # Swap (2GB) para evitar OOM durante instalação na VM de 1GB
-            if [ ! -f /swapfile ]; then
-              sudo fallocate -l 2G /swapfile
+            # Swap (2GB) — usar dd (fallocate cria arquivo esparso que nao funciona como swap)
+            if ! swapon --show | grep -q /swapfile; then
+              sudo dd if=/dev/zero of=/swapfile bs=1M count=2048 status=none
               sudo chmod 600 /swapfile
               sudo mkswap /swapfile
               sudo swapon /swapfile
-              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              grep -q /swapfile /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
             fi
+            free -h
 
             # Docker
             if ! command -v docker &>/dev/null; then
               sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-              sudo dnf install -y git
-              sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+              sudo dnf install -y --allowerasing git docker-ce docker-ce-cli containerd.io docker-compose-plugin
               sudo systemctl enable --now docker
               sudo usermod -aG docker opc
             fi
@@ -67,9 +67,11 @@ jobs:
               echo ".env criado com valores padrao"
             fi
 
-            # Start all containers
+            # Build e subir containers (um por vez para nao OOM)
             cd /home/opc/proteinaja-backend
-            sudo docker compose up -d --build
+            sudo docker compose build backend
+            sudo docker compose build frontend
+            sudo docker compose up -d
 
             echo "=== Setup complete ==="
             sudo docker --version
