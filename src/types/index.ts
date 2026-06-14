@@ -44,6 +44,15 @@ export interface Pedido {
   created_at: string;
 }
 
+export interface Produto {
+  id: number;
+  nome: string;
+  categoria: string | null;
+  preco_kg: number;
+  ativo: boolean;
+  created_at: string;
+}
+
 export interface DashboardOverview {
   pedidos_hoje: number;
   pedidos_agente_hoje: number;

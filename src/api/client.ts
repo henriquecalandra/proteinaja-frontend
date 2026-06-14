@@ -78,4 +78,24 @@ export const mudarStatusPedido = (pedidoId: number, status: string) =>
   api.patch(`/orders/${pedidoId}`, { status });
 export const getClientes = () => api.get('/clients/');
 
+export interface ProdutoCreatePayload {
+  nome: string;
+  preco_kg: number;
+  categoria?: string | null;
+  ativo?: boolean;
+}
+
+export interface ProdutoUpdatePayload {
+  nome?: string;
+  preco_kg?: number;
+  categoria?: string | null;
+  ativo?: boolean;
+}
+
+export const getProdutos = () => api.get('/products/');
+export const criarProduto = (payload: ProdutoCreatePayload) =>
+  api.post('/products/', payload);
+export const atualizarProduto = (id: number, payload: ProdutoUpdatePayload) =>
+  api.patch(`/products/${id}`, payload);
+
 export default api;

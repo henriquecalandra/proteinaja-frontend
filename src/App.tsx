@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Conversas from './pages/Conversas';
 import Pedidos from './pages/Pedidos';
+import Produtos from './pages/Produtos';
 import Clientes from './pages/Clientes';
 
 function isAuthenticated() {
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/" element={<PrivateLayout><Home /></PrivateLayout>} />
         <Route path="/conversas" element={<PrivateLayout><Conversas /></PrivateLayout>} />
         <Route path="/pedidos" element={<PrivateLayout><Pedidos /></PrivateLayout>} />
+        <Route path="/produtos" element={<PrivateLayout><Produtos /></PrivateLayout>} />
         <Route path="/clientes" element={<PrivateLayout><Clientes /></PrivateLayout>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

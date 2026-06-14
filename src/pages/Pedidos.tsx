@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react';
-import { getPedidos, mudarStatusPedido, getClientes, criarPedido, ItemPedidoInput } from '../api/client';
-import { Pedido, ItemPedido, Cliente } from '../types';
+import { getPedidos, mudarStatusPedido, getClientes, criarPedido, getProdutos, ItemPedidoInput } from '../api/client';
+import { Pedido, ItemPedido, Cliente, Produto } from '../types';
 
 const STATUS_OPCOES: Pedido['status'][] = ['confirmado', 'negociando', 'aguardando', 'entregue'];
 
@@ -25,6 +25,7 @@ const itemVazio: ItemPedidoInput = { produto: '', qtd_kg: 0, preco_kg: 0 };
 export default function Pedidos() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [clienteId, setClienteId] = useState<number | ''>('');
   const [itens, setItens] = useState<ItemPedidoInput[]>([{ ...itemVazio }]);
@@ -38,6 +39,7 @@ export default function Pedidos() {
   useEffect(() => {
     carregarPedidos();
     getClientes().then((r) => setClientes(r.data)).catch(() => {});
+    getProdutos().then((r) => setProdutos(r.data)).catch(() => {});
   }, []);
 
   const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -58,6 +60,17 @@ export default function Pedidos() {
     setItens((prev) =>
       prev.map((it, i) =>
         i === idx ? { ...it, [campo]: campo === 'produto' ? valor : Number(valor) } : it
+      )
+    );
+  }
+
+  function selecionarProduto(idx: number, nome: string) {
+    const prod = produtos.find((p) => p.nome === nome);
+    setItens((prev) =>
+      prev.map((it, i) =>
+        i === idx
+          ? { ...it, produto: nome, preco_kg: prod ? prod.preco_kg : it.preco_kg }
+          : it
       )
     );
   }
@@ -222,13 +235,21 @@ export default function Pedidos() {
                 <div className="space-y-2">
                   {itens.map((it, idx) => (
                     <div key={idx} className="flex gap-2 items-center">
-                      <input
-                        type="text"
+                      <select
                         value={it.produto}
-                        onChange={(e) => atualizarItem(idx, 'produto', e.target.value)}
-                        placeholder="Produto"
+                        onChange={(e) => selecionarProduto(idx, e.target.value)}
                         className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-accent"
-                      />
+                      >
+                        <option value="">Selecione o produto...</option>
+                        {it.produto && !produtos.some((p) => p.nome === it.produto) && (
+                          <option value={it.produto}>{it.produto}</option>
+                        )}
+                        {produtos.map((p) => (
+                          <option key={p.id} value={p.nome}>
+                            {p.nome}
+                          </option>
+                        ))}
+                      </select>
                       <input
                         type="number"
                         min="0"

@@ -4,6 +4,7 @@ const links = [
   { to: '/', label: 'Início', icon: '📊' },
   { to: '/conversas', label: 'Conversas', icon: '💬' },
   { to: '/pedidos', label: 'Pedidos', icon: '📦' },
+  { to: '/produtos', label: 'Produtos', icon: '🥩' },
   { to: '/clientes', label: 'Clientes', icon: '👥' },
 ];
 
