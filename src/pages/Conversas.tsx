@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getConversas, getMensagens, assumirConversa } from '../api/client';
+import { getConversas, getMensagens, assumirConversa, enviarMensagem } from '../api/client';
 import { Conversa, Mensagem } from '../types';
 
 const statusLabel: Record<string, string> = {
@@ -12,6 +12,8 @@ export default function Conversas() {
   const [conversas, setConversas] = useState<Conversa[]>([]);
   const [selected, setSelected] = useState<Conversa | null>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [novaMensagem, setNovaMensagem] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
     getConversas().then((r) => setConversas(r.data)).catch(() => {});
@@ -29,6 +31,20 @@ export default function Conversas() {
     setConversas((prev) =>
       prev.map((c) => (c.id === selected.id ? { ...c, status: 'humano' } : c))
     );
+  }
+
+  async function enviar() {
+    if (!selected || !novaMensagem.trim() || enviando) return;
+    setEnviando(true);
+    try {
+      const r = await enviarMensagem(selected.id, novaMensagem.trim());
+      setMensagens((prev) => [...prev, r.data]);
+      setNovaMensagem('');
+    } catch {
+      // ignora erro na demo
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
@@ -49,7 +65,7 @@ export default function Conversas() {
                 selected?.id === c.id ? 'bg-bg border-l-4 border-l-accent' : ''
               }`}
             >
-              <div className="text-sm font-bold text-sidebar">Conversa #{c.id}</div>
+              <div className="text-sm font-bold text-sidebar">{c.cliente_nome}</div>
               <div className="text-xs text-gray-400 mt-0.5">{statusLabel[c.status]}</div>
             </button>
           ))
@@ -62,7 +78,7 @@ export default function Conversas() {
           <>
             <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <div>
-                <div className="font-bold text-sidebar">Conversa #{selected.id}</div>
+                <div className="font-bold text-sidebar">{selected.cliente_nome}</div>
                 <div className="text-xs text-gray-400">{statusLabel[selected.status]}</div>
               </div>
               {selected.status === 'agente' && (
@@ -97,6 +113,27 @@ export default function Conversas() {
                 <p className="text-center text-gray-400 text-sm">Sem mensagens ainda.</p>
               )}
             </div>
+            {selected.status === 'humano' && (
+              <div className="bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={novaMensagem}
+                  onChange={(e) => setNovaMensagem(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') enviar();
+                  }}
+                  placeholder="Digite uma mensagem..."
+                  className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-accent"
+                />
+                <button
+                  onClick={enviar}
+                  disabled={enviando || !novaMensagem.trim()}
+                  className="bg-accent text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50"
+                >
+                  Enviar
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">

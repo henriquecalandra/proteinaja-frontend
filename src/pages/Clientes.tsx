@@ -38,7 +38,20 @@ export default function Clientes() {
                   {tipoLabel[c.tipo]}
                 </span>
               </div>
-              {c.cidade && <div className="text-xs text-gray-400 mb-3">📍 {c.cidade}</div>}
+              {c.cidade && <div className="text-xs text-gray-400 mb-1">📍 {c.cidade}</div>}
+              {c.cnpj && <div className="text-xs text-gray-400 mb-3">🏢 CNPJ {c.cnpj}</div>}
+              <div className="flex gap-4 mb-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-400">Pedidos</div>
+                  <div className="text-sm font-bold text-sidebar">{c.total_pedidos}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-400">Total comprado</div>
+                  <div className="text-sm font-bold text-accent">
+                    {c.valor_total_comprado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </div>
+                </div>
+              </div>
               <a
                 href={`https://wa.me/${c.whatsapp}`}
                 target="_blank"
