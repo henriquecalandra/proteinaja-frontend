@@ -45,6 +45,19 @@ export interface ClienteCreatePayload {
   cnpj?: string | null;
   cidade?: string | null;
   atendido_por_ia?: boolean;
+  email?: string | null;
+  telefone?: string | null;
+  razao_social?: string | null;
+  inscricao_estadual?: string | null;
+  endereco?: string | null;
+  bairro?: string | null;
+  uf?: string | null;
+  cep?: string | null;
+  contato_nome?: string | null;
+  condicao_pagamento?: string | null;
+  limite_credito?: number | null;
+  observacoes?: string | null;
+  vendedor_id?: number | null;
 }
 
 export interface ClienteUpdatePayload {
@@ -54,7 +67,42 @@ export interface ClienteUpdatePayload {
   tipo?: 'acougue' | 'restaurante' | 'mercadinho' | 'food_service';
   ativo?: boolean;
   atendido_por_ia?: boolean;
+  email?: string | null;
+  telefone?: string | null;
+  razao_social?: string | null;
+  inscricao_estadual?: string | null;
+  endereco?: string | null;
+  bairro?: string | null;
+  uf?: string | null;
+  cep?: string | null;
+  contato_nome?: string | null;
+  condicao_pagamento?: string | null;
+  limite_credito?: number | null;
+  observacoes?: string | null;
+  vendedor_id?: number | null;
 }
+
+export interface VendedorCreatePayload {
+  nome: string;
+  email?: string | null;
+  telefone?: string | null;
+  ativo?: boolean;
+  meta_mensal?: number | null;
+}
+
+export interface VendedorUpdatePayload {
+  nome?: string;
+  email?: string | null;
+  telefone?: string | null;
+  ativo?: boolean;
+  meta_mensal?: number | null;
+}
+
+export const getVendedores = () => api.get('/sellers');
+export const criarVendedor = (payload: VendedorCreatePayload) =>
+  api.post('/sellers', payload);
+export const atualizarVendedor = (id: number, payload: VendedorUpdatePayload) =>
+  api.patch(`/sellers/${id}`, payload);
 
 export interface ItemPedidoInput {
   produto: string;

@@ -10,6 +10,30 @@ export interface Cliente {
   total_pedidos: number;
   valor_total_comprado: number;
   atendido_por_ia: boolean;
+  email: string | null;
+  telefone: string | null;
+  razao_social: string | null;
+  inscricao_estadual: string | null;
+  endereco: string | null;
+  bairro: string | null;
+  uf: string | null;
+  cep: string | null;
+  contato_nome: string | null;
+  condicao_pagamento: string | null;
+  limite_credito: number | null;
+  observacoes: string | null;
+  vendedor_id: number | null;
+}
+
+export interface Vendedor {
+  id: number;
+  nome: string;
+  email: string | null;
+  telefone: string | null;
+  ativo: boolean;
+  meta_mensal: number | null;
+  empresa_id?: number | null;
+  created_at: string;
 }
 
 export interface Mensagem {

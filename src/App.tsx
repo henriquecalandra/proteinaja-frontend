@@ -6,6 +6,7 @@ import Conversas from './pages/Conversas';
 import Pedidos from './pages/Pedidos';
 import Produtos from './pages/Produtos';
 import Clientes from './pages/Clientes';
+import Vendedores from './pages/Vendedores';
 import Admin from './pages/Admin';
 import Configuracoes from './pages/Configuracoes';
 import Inteligencia from './pages/Inteligencia';
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/pedidos" element={<PrivateLayout><Pedidos /></PrivateLayout>} />
         <Route path="/produtos" element={<PrivateLayout><Produtos /></PrivateLayout>} />
         <Route path="/clientes" element={<PrivateLayout><Clientes /></PrivateLayout>} />
+        <Route path="/vendedores" element={<PrivateLayout><Vendedores /></PrivateLayout>} />
         <Route path="/inteligencia" element={<PrivateLayout><Inteligencia /></PrivateLayout>} />
         <Route path="/funil" element={<PrivateLayout><Funil /></PrivateLayout>} />
         <Route path="/admin" element={<PrivateLayout><Admin /></PrivateLayout>} />
