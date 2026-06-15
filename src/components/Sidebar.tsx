@@ -8,6 +8,8 @@ const links = [
   { to: '/pedidos', label: 'Pedidos', icon: '📦' },
   { to: '/produtos', label: 'Produtos', icon: '🥩' },
   { to: '/clientes', label: 'Clientes', icon: '👥' },
+  { to: '/inteligencia', label: 'Inteligência', icon: '🧠' },
+  { to: '/funil', label: 'Funil', icon: '🗂️' },
 ];
 
 export default function Sidebar() {

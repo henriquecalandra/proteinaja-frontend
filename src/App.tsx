@@ -8,6 +8,8 @@ import Produtos from './pages/Produtos';
 import Clientes from './pages/Clientes';
 import Admin from './pages/Admin';
 import Configuracoes from './pages/Configuracoes';
+import Inteligencia from './pages/Inteligencia';
+import Funil from './pages/Funil';
 
 function isAuthenticated() {
   return !!localStorage.getItem('token');
@@ -33,6 +35,8 @@ export default function App() {
         <Route path="/pedidos" element={<PrivateLayout><Pedidos /></PrivateLayout>} />
         <Route path="/produtos" element={<PrivateLayout><Produtos /></PrivateLayout>} />
         <Route path="/clientes" element={<PrivateLayout><Clientes /></PrivateLayout>} />
+        <Route path="/inteligencia" element={<PrivateLayout><Inteligencia /></PrivateLayout>} />
+        <Route path="/funil" element={<PrivateLayout><Funil /></PrivateLayout>} />
         <Route path="/admin" element={<PrivateLayout><Admin /></PrivateLayout>} />
         <Route path="/configuracoes" element={<PrivateLayout><Configuracoes /></PrivateLayout>} />
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -111,6 +111,38 @@ export interface AdminOverview {
   total_clientes: number;
 }
 
+export interface ComparativoOrigem {
+  pedidos: number;
+  volume: number;
+  ticket_medio: number;
+}
+
+export interface Comparativo {
+  ia: ComparativoOrigem;
+  humano: ComparativoOrigem;
+  pct_ia: number;
+}
+
+export interface ClienteInativo {
+  id: number;
+  nome: string;
+  whatsapp: string;
+  cidade: string | null;
+  dias_sem_comprar: number;
+  ultimo_pedido: string | null;
+  total_pedidos: number;
+}
+
+export interface ClienteReposicao {
+  id: number;
+  nome: string;
+  whatsapp: string;
+  intervalo_medio_dias: number;
+  ultimo_pedido: string;
+  proxima_sugerida: string;
+  devido: boolean;
+}
+
 export interface DashboardAnalytics {
   faturamento_por_dia: { dia: string; total: number; qtd: number }[];
   pedidos_por_status: {

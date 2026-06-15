@@ -90,6 +90,10 @@ export const getPedidos = () => api.get('/orders/');
 export const mudarStatusPedido = (pedidoId: number, status: string) =>
   api.patch(`/orders/${pedidoId}`, { status });
 export const getClientes = () => api.get('/clients/');
+export const getComparativo = () => api.get('/dashboard/comparativo');
+export const getInativos = (dias?: number) =>
+  api.get('/clients/inativos', { params: dias != null ? { dias } : undefined });
+export const getReposicao = () => api.get('/clients/reposicao');
 
 export interface ProdutoCreatePayload {
   nome: string;
